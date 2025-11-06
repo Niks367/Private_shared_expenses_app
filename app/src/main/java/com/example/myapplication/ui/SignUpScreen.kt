@@ -24,7 +24,7 @@ import com.example.myapplication.entities.Profile
 
 @Composable
 fun SignupScreen(
-    onSubmit: (Profile) -> Unit,
+    onProfileCreated: (Profile) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var name by remember { mutableStateOf("") }
@@ -34,58 +34,71 @@ fun SignupScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Column(
-            modifier = modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Full Name") },
-                singleLine = true
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Full Name") },
+            singleLine = true
         )
         OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            singleLine = true
         )
         OutlinedTextField(
-                value = phone,
-                onValueChange = { phone = it },
-                label = { Text("Phone") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                singleLine = true
+            value = phone,
+            onValueChange = { phone = it },
+            label = { Text("Phone (optional)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            singleLine = true
         )
         OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                visualTransformation = PasswordVisualTransformation(),
-                singleLine = true
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            visualTransformation = PasswordVisualTransformation(),
+            singleLine = true
         )
+
         errorMessage?.let {
             Text(text = it, color = MaterialTheme.colorScheme.error)
         }
+
         Button(
-                onClick = {
-                    // Simple validation before invoking callback
-                    when {
-                        name.isBlank() -> errorMessage = "Name required"
-                        !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> errorMessage = "Invalid email"
-                        password.length < 6 -> errorMessage = "Password must be ≥6 chars"
-                        else -> {
-                            errorMessage = null
-                            onSubmit(Profile(name, email, phone, password))
-                        }
+            onClick = {
+                // ---------- Validation ----------
+                when {
+                    name.isBlank() -> errorMessage = "Please enter a name"
+                    !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> errorMessage = "Invalid email address"
+                    password.length < 6 -> errorMessage = "Password must be at least 6 characters"
+                    else -> {
+                        errorMessage = null
+                        val hashed = hashPassword(password)
+                        val profile = Profile(name, email, phone.takeIf { it.isNotBlank() }, hashed)
+                        onProfileCreated(profile)
                     }
-                },
-                modifier = Modifier.fillMaxWidth()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text("Create Account")
         }
     }
+}
+
+/**
+ * Simple SHA‑256 hash – replace with Argon2/Bcrypt for production.
+ */
+private fun hashPassword(password: String): String {
+    val md = java.security.MessageDigest.getInstance("SHA-256")
+    val bytes = md.digest(password.toByteArray(Charsets.UTF_8))
+    return android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
 }
