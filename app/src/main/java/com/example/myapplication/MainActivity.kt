@@ -45,3 +45,8 @@ fun GreetingPreview() {
         Greeting("Android")
     }
 }
+fun hashPassword(password: String): String {
+    val md = MessageDigest.getInstance("SHA-256")
+    val bytes = md.digest(password.toByteArray(Charsets.UTF_8))
+    return Base64.encodeToString(bytes, Base64.NO_WRAP)
+}
