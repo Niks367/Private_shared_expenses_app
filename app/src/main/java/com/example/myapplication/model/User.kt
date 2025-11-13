@@ -1,4 +1,4 @@
-package user.model
+package com.example.myapplication.model
 
 data class User (
     val userId: String,

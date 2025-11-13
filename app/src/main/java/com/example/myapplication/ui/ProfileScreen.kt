@@ -1,4 +1,4 @@
-package user.ui
+package com.example.myapplication.ui
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -9,7 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import user.model.User
+import com.example.myapplication.model.User
 
 // This is the main Composable for the profile screen
 @Composable
