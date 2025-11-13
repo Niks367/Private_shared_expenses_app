@@ -1,3 +1,5 @@
+package com.example.myapplication.ui
+
 import android.util.Patterns
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -38,7 +41,8 @@ fun SignupScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.Center, // Center vertically
+        horizontalAlignment = Alignment.CenterHorizontally // Center horizontally
     ) {
         OutlinedTextField(
             value = name,
@@ -46,6 +50,7 @@ fun SignupScreen(
             label = { Text("Full Name") },
             singleLine = true
         )
+
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
@@ -53,6 +58,7 @@ fun SignupScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             singleLine = true
         )
+
         OutlinedTextField(
             value = phone,
             onValueChange = { phone = it },
@@ -60,6 +66,7 @@ fun SignupScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             singleLine = true
         )
+
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -82,7 +89,16 @@ fun SignupScreen(
                     else -> {
                         errorMessage = null
                         val hashed = hashPassword(password)
-                        val profile = Profile(name, email, phone.takeIf { it.isNotBlank() }, hashed)
+
+                        // Create Profile object correctly
+                        val profile = Profile(
+                            id = 0L, // or null if your DB auto-generates IDs
+                            name = name,
+                            email = email,
+                            phone = phone.takeIf { it.isNotBlank() },
+                            passwordHash = hashed
+                        )
+
                         onProfileCreated(profile)
                     }
                 }
@@ -95,7 +111,7 @@ fun SignupScreen(
 }
 
 /**
- * Simple SHA‑256 hash – replace with Argon2/Bcrypt for production.
+ * Simple SHA-256 hash – replace with Argon2/Bcrypt for production.
  */
 private fun hashPassword(password: String): String {
     val md = java.security.MessageDigest.getInstance("SHA-256")
