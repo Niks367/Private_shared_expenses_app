@@ -28,15 +28,13 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize()
-                ) { innerPadding ->  // ✅ Safe and correct lambda parameter
-
-                    // ✅ Apply innerPadding to the NavHost content
+                ) { innerPadding ->
                     NavHost(
                         navController = navController,
                         startDestination = "signup",
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        // ---------- SIGNUP SCREEN ----------
+
                         composable("signup") {
                             SignupScreen(
                                 onProfileCreated = { profile ->
@@ -46,8 +44,6 @@ class MainActivity : ComponentActivity() {
                                             "Welcome, ${profile.name}!",
                                             android.widget.Toast.LENGTH_LONG
                                         ).show()
-
-                                        // Navigate to Login screen
                                         navController.navigate("login") {
                                             popUpTo("signup") { inclusive = true }
                                         }
@@ -56,8 +52,6 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
-
-                        // ---------- LOGIN SCREEN ----------
                         composable("login") {
                             LoginScreen(
                                 onLoginSuccess = {
@@ -67,7 +61,6 @@ class MainActivity : ComponentActivity() {
                                             "Login successful!",
                                             android.widget.Toast.LENGTH_LONG
                                         ).show()
-                                        // TODO: Navigate to home/main screen
                                     }
                                 },
                                 modifier = Modifier.fillMaxSize()

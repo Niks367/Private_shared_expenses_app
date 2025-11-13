@@ -37,38 +37,47 @@ android {
     buildFeatures {
         compose = true
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.10"
+    }
 }
 
 dependencies {
+    // ---------- ONE COMPOSE BOM ----------
+    implementation(platform(libs.androidx.compose.bom.v20251100))
 
+    // ---------- CORE AND ACTIVITY ----------
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
+
+    // ---------- COMPOSE UI ----------
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.room.ktx)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // ---------- NAVIGATION ----------
+    implementation(libs.androidx.navigation.compose)
+
+    // ---------- LIFECYCLE ----------
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+
+    // ---------- OTHER GOOGLE / SUPPORT ----------
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+
+    // ---------- OPTIONAL IMAGE LIBRARIES ----------
+    implementation(libs.landscapist)
+    implementation(libs.landscapist.coil3)
+
+    // ---------- TEST ----------
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("com.google.android.material:material:1.13.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0-beta01")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.9.5")
-    implementation("androidx.navigation:navigation-ui-ktx:2.9.5")
-    implementation("androidx.room:room-runtime:2.8.3")
-    implementation("androidx.room:room-ktx:2.8.3")
-    implementation("androidx.compose.ui:ui:1.9.4")
-    implementation("androidx.compose.material3:material3:1.4.0")
-    implementation("androidx.navigation:navigation-compose:2.8.3")
-    implementation("androidx.activity:activity-compose:1.11.0")
-    implementation("com.github.skydoves:landscapist:2.6.1")
-    // https://mvnrepository.com/artifact/com.github.skydoves/landscapist-coil3
-    implementation("com.github.skydoves:landscapist-coil3:2.6.1")
 }
