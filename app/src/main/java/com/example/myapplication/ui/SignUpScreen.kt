@@ -28,11 +28,9 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SignupScreen(
-    // MODIFIED: This screen is now "dumb" and passes raw input up.
     onSignupClick: (String, String, String, String, String) -> Unit,
     onNavigateToLogin: () -> Unit,
     modifier: Modifier = Modifier,
-    // MODIFIED: Allow MainActivity to pass down an error message
     errorMessage: String? = null
 ) {
     var firstName by remember { mutableStateOf("") }
@@ -114,4 +112,3 @@ fun SignupScreen(
         }
     }
 }
-// REMOVED: hashPassword function is no longer needed here.

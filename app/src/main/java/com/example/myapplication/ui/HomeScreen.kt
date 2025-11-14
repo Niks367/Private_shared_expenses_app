@@ -55,7 +55,6 @@ fun HomeScreen(user: User?, onProfileClick: () -> Unit) {
         .joinToString("")
         .take(2)
 
-    // --- NEW: Root Box to allow floating the profile button ---
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -662,7 +661,6 @@ fun HomeScreen(user: User?, onProfileClick: () -> Unit) {
             }
         }
 
-        // --- NEW: Floating profile button in the top right corner ---
         OutlinedButton(
             onClick = onProfileClick,
             modifier = Modifier

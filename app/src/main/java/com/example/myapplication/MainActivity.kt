@@ -140,7 +140,6 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            // --- NEW: Unconditionally show HomeScreen and pass data ---
                             HomeScreen(
                                 user = currentUser,
                                 onProfileClick = { navController.navigate("profile/${userId}") }

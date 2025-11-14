@@ -43,7 +43,6 @@ android {
 dependencies {
     // ---------- ONE COMPOSE BOM ----------
     implementation(platform(libs.androidx.compose.bom))
-    // NEW: Add the BOM for Android tests to ensure version alignment
     androidTestImplementation(platform(libs.androidx.compose.bom))
 
     // ---------- CORE AND ACTIVITY ----------
@@ -60,7 +59,6 @@ dependencies {
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
-    // NEW: Add the missing KSP dependency for Room
     ksp(libs.androidx.room.compiler)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
