@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.ksp)
 }
 
 android {
@@ -37,14 +38,13 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.10"
-    }
 }
 
 dependencies {
     // ---------- ONE COMPOSE BOM ----------
-    implementation(platform(libs.androidx.compose.bom.v20251100))
+    implementation(platform(libs.androidx.compose.bom))
+    // NEW: Add the BOM for Android tests to ensure version alignment
+    androidTestImplementation(platform(libs.androidx.compose.bom))
 
     // ---------- CORE AND ACTIVITY ----------
     implementation(libs.androidx.core.ktx)
@@ -55,8 +55,14 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
+    // ---------- ROOM DATABASE ----------
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.runtime)
+    // NEW: Add the missing KSP dependency for Room
+    ksp(libs.androidx.room.compiler)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // ---------- NAVIGATION ----------

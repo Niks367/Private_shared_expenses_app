@@ -12,7 +12,8 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit,
+    onLoginSuccess: (String, String) -> Unit, // Pass email and password
+    onNavigateToSignup: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var email by remember { mutableStateOf("") }
@@ -55,12 +56,21 @@ fun LoginScreen(
                     errorMessage = "Please enter both email and password"
                 } else {
                     errorMessage = null
-                    onLoginSuccess()
+                    onLoginSuccess(email, password)
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Log In")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextButton(
+            onClick = onNavigateToSignup,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Don't have an account? Sign up")
         }
     }
 }
