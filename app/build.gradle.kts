@@ -1,8 +1,9 @@
+import org.gradle.kotlin.dsl.invoke
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-}
+    alias(libs.plugins.kotlin.compose) }
 
 android {
     namespace = "com.example.myapplication"
@@ -19,6 +20,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -36,6 +41,9 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    packagingOptions {
+        pickFirst("META-INF/gradle/incremental.annotation.processors")
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.10"
@@ -57,6 +65,8 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.ads.mobile.sdk)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // ---------- NAVIGATION ----------
@@ -80,4 +90,8 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation(libs.retrofit)
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.google.code.gson:gson:2.10.1")
+
 }

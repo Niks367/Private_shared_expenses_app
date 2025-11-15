@@ -1,662 +1,388 @@
 package com.example.myapplication.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.request.ImageRequest
-import coil3.request.crossfade
-import com.skydoves.landscapist.ImageOptions
-import com.skydoves.landscapist.coil3.CoilImage
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.myapplication.R
+import com.example.myapplication.ui.viewmodels.HomeViewModel
+import java.util.Calendar
 
 @Composable
-fun Homepage() {
+fun Homepage(
+    userName: String,
+    userId: String,
+    viewModel: HomeViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(userId) {
+        viewModel.fetchUserBalance(userId)
+    }
+    Scaffold(
+        topBar = { GreetingBar(userName = userName) },
+        containerColor = Color.White
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(innerPadding)
+        ) {
+            BalanceCard(uiState = uiState)
+            TransactionHistorySection()
+            SendAgainSection()
+        }
+    }
+}
+@Composable
+fun LoadingBalancePlaceholder() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp)
+            .background(Color.LightGray, RoundedCornerShape(20.dp))
+    )
+}
+
+@Composable
+fun ErrorBalanceView(message: String, onRetry: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight()
-            .background(
-                color = Color(0xFFFFFFFF),
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "Unable to load balance", color = Color.Red)
+        Text(text = message, style = MaterialTheme.typography.bodyMedium)
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(onClick = onRetry) {
+            Text("Retry")
+        }
+    }
+}
+@Composable
+fun BalanceCard(uiState: HomeViewModel.UiState) {
+    if (uiState.isLoading) {
+        LoadingBalancePlaceholder()
+        return
+    }
+
+    uiState.error?.let { errMsg ->
+        ErrorBalanceView(message = errMsg) {
+
+        }
+        return
+    }
+
+    val balance = uiState.balance ?: return
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color(0xFF2E7E78))
+            .padding(20.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Total Balance",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                NotificationIcon()
+            }
+
+            Text(
+                text = "$${balance.total}",
+                color = Color.White,
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(vertical = 10.dp)
             )
-    ){
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .background(
-                    color = Color(0xFFFFFFFF),
-                )
-                .verticalScroll(rememberScrollState())
-        ){
-            Box(
-                modifier = Modifier
-                    .padding(bottom = 30.dp)
-            ){
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ){
-                    val request = ImageRequest.Builder(LocalContext.current)
-                        .data("https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/d1f81298-0c34-4a91-b4b1-209964ed53b3")
-                        .crossfade(true)
-                        .build()
-                    CoilImage(
-                        imageModel = { request },
-                        imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                        modifier = Modifier
-                            .padding(bottom = 70.dp)
-                            .height(287.dp)
-                            .fillMaxWidth()
-                    )
-                }
-                Column(
-                    modifier = Modifier
-                        .offset(x = 20.dp, y = -1.dp)
-                        .align(Alignment.BottomStart)
-                        .padding(start = 20.dp)
-                        .clip(shape = RoundedCornerShape(20.dp))
-                        .fillMaxWidth()
-                        .background(
-                            color = Color(0xFF2E7E78),
-                            shape = RoundedCornerShape(20.dp)
-                        )
-                        .padding(end = 20.dp)
-                ){
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(top = 25.dp, bottom = 8.dp, start = 20.dp)
-                            .fillMaxWidth()
-                    ){
-                        Row(
-                        ){
-                            Text("Total Balance",
-                                color = Color(0xFFFFFFFF),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier
-                                    .padding(end = 5.dp)
-                            )
-                            val request = ImageRequest.Builder(LocalContext.current)
-                                .data("https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/5ba99855-dbf3-4a62-9166-8dfd98cb3dfa")
-                                .crossfade(true)
-                                .build()
-                            CoilImage(
-                                imageModel = {request},
-                                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                                modifier = Modifier
-                                    .width(18.dp)
-                                    .height(18.dp)
-                            )
-                        }
-                        val request = ImageRequest.Builder(LocalContext.current)
-                            .data("https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/9d9afcec-3f80-4be4-bfb2-07b1497ab545")
-                            .crossfade(true)
-                            .build()
-                        CoilImage(
-                            imageModel = {request},
-                            imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                            modifier = Modifier
-                                .width(21.dp)
-                                .height(5.dp)
-                        )
-                    }
-                    Text("$ 2,548.00",
-                        color = Color(0xFFFFFFFF),
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .padding(bottom = 30.dp, start = 20.dp)
-                    )
-                    Row(
-                        modifier = Modifier
-                            .padding(bottom = 59.dp, start = 18.dp)
-                    ){
-                        OutlinedButton(
-                            onClick = { println("Pressed!") },
-                            border = BorderStroke(0.dp, Color.Transparent),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = Color.Transparent   // or any colour you need
-                            ),
-                            contentPadding = PaddingValues(),
-                            modifier = Modifier
-                                .padding(end = 205.dp)
-                                .clip(shape = RoundedCornerShape(40.dp))
-                                .background(
-                                    color = Color(0x26FFFFFF),
-                                    shape = RoundedCornerShape(40.dp)
-                                )
-                        ){
-                            Column(
-                                modifier = Modifier
-                                    .padding(3.dp)
-                            ){
-                                val request = ImageRequest.Builder(LocalContext.current)
-                                    .data("https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/9f1d947c-1baf-4543-ba97-91a181e90de2")
-                                    .crossfade(true)
-                                    .build()
-                                CoilImage(
-                                    imageModel = {request},
-                                    imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                                    modifier = Modifier
-                                        .clip(shape = RoundedCornerShape(40.dp))
-                                        .width(18.dp)
-                                        .height(18.dp)
-                                )
-                            }
-                        }
-                        OutlinedButton(
-                            onClick = { println("Pressed!") },
-                            border = BorderStroke(0.dp, Color.Transparent),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = Color.Transparent   // or any colour you need
-                            ),
-                            contentPadding = PaddingValues(),
-                            modifier = Modifier
-                                .clip(shape = RoundedCornerShape(40.dp))
-                                .background(
-                                    color = Color(0x26FFFFFF),
-                                    shape = RoundedCornerShape(40.dp)
-                                )
-                        ){
-                            Column(
-                                modifier = Modifier
-                                    .padding(3.dp)
-                            ){
-                                val request = ImageRequest.Builder(LocalContext.current)
-                                    .data("https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/f0413aec-eed5-4222-9485-5d09b507c287")
-                                    .crossfade(true)
-                                    .build()
-                                CoilImage(
-                                    imageModel = {request},
-                                    imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                                    modifier = Modifier
-                                        .clip(shape = RoundedCornerShape(40.dp))
-                                        .width(18.dp)
-                                        .height(18.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-                Column(
-                    modifier = Modifier
-                        .offset(x = 29.dp, y = 0.dp)
-                        .align(Alignment.BottomStart)
-                        .padding(start = 29.dp)
-                        .clip(shape = RoundedCornerShape(20.dp))
-                        .fillMaxWidth()
-                        .background(
-                            color = Color(0xFF1A5C57),
-                            shape = RoundedCornerShape(20.dp)
-                        )
-                ){
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(bottom = 7.dp, start = 39.dp, end = 14.dp)
-                            .fillMaxWidth()
-                    ){
-                        Text(
-                            "Income",
-                            color = Color(0xFFD0E5E3),
-                            fontSize = 16.sp,
-                        )
-                        Text(
-                            "Expenses",
-                            color = Color(0xFFD0E5E3),
-                            fontSize = 18.sp,
-                        )
-                    }
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier
-                            .padding(bottom = 30.dp, start = 11.dp, end = 11.dp)
-                            .fillMaxWidth()
-                    ){
-                        Text(
-                            "$ 1,840.00",
-                            color = Color(0xFFFFFFFF),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(
-                            "$ 284.00",
-                            color = Color(0xFFFFFFFF),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
-            }
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(bottom = 19.dp, start = 22.dp, end = 22.dp)
-                    .fillMaxWidth()
-            ){
-                Text(
-                    "Transactions history",
-                    color = Color(0xFF222222),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    "See all",
-                    color = Color(0xFF666666),
-                    fontSize = 14.sp,
-                )
-            }
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(bottom = 16.dp, start = 22.dp, end = 22.dp)
-                    .fillMaxWidth()
-            ){
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ){
-                    OutlinedButton(
-                        onClick = { println("Pressed!") },
-                        border = BorderStroke(0.dp, Color.Transparent),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color.Transparent   // or any colour you need
-                        ),
-                        contentPadding = PaddingValues(),
-                        modifier = Modifier
-                            .padding(end = 9.dp)
-                            .clip(shape = RoundedCornerShape(8.dp))
-                            .background(
-                                color = Color(0xFFF0F6F5),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                    ){
-                        Column(
-                            modifier = Modifier
-                                .padding(vertical = 10.dp, horizontal = 8.dp)
-                        ){
-                            val request = ImageRequest.Builder(LocalContext.current)
-                                .data("https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/985dbd33-90ec-4c94-ab3d-3bf9de287b8b")
-                                .crossfade(true)
-                                .build()
-                            CoilImage(
-                                imageModel = {request},
-                                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                                modifier = Modifier
-                                    .clip(shape = RoundedCornerShape(8.dp))
-                                    .width(34.dp)
-                                    .height(30.dp)
-                            )
-                        }
-                    }
-                    Column(
-                    ){
-                        Text("Upwork",
-                            color = Color(0xFF000000),
-                            fontSize = 16.sp,
-                            modifier = Modifier
-                                .padding(bottom = 6.dp)
-                        )
-                        Text("Today",
-                            color = Color(0xFF666666),
-                            fontSize = 13.sp,
-                            modifier = Modifier
-                                .padding(end = 20.dp)
-                        )
-                    }
-                }
-                Text(
-                    "+ $ 850.00",
-                    color = Color(0xFF24A869),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(bottom = 16.dp, start = 22.dp, end = 22.dp)
-                    .fillMaxWidth()
-            ){
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ){
-                    OutlinedButton(
-                        onClick = { println("Pressed!") },
-                        border = BorderStroke(0.dp, Color.Transparent),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color.Transparent   // or any colour you need
-                        ),
-                        contentPadding = PaddingValues(),
-                        modifier = Modifier
-                            .padding(end = 9.dp)
-                            .clip(shape = RoundedCornerShape(8.dp))
-                            .background(
-                                color = Color(0xFFF0F6F5),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                    ){
-                        Column(
-                            modifier = Modifier
-                                .padding(10.dp)
-                        ){
-                            val request = ImageRequest.Builder(LocalContext.current)
-                                .data("https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/14bc6b50-b361-4070-8a88-c963acbd9a04")
-                                .crossfade(true)
-                                .build()
-                            CoilImage(
-                                imageModel = {request},
-                                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                                modifier = Modifier
-                                    .clip(shape = RoundedCornerShape(8.dp))
-                                    .width(30.dp)
-                                    .height(30.dp)
-                            )
-                        }
-                    }
-                    Column(
-                    ){
-                        Text("Transfer",
-                            color = Color(0xFF000000),
-                            fontSize = 16.sp,
-                            modifier = Modifier
-                                .padding(bottom = 6.dp)
-                        )
-                        Text(
-                            "Yesterday",
-                            color = Color(0xFF666666),
-                            fontSize = 13.sp,
-                        )
-                    }
-                }
-                Text(
-                    "- $ 85.00",
-                    color = Color(0xFFF95B51),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(bottom = 16.dp, start = 22.dp, end = 22.dp)
-                    .fillMaxWidth()
-            ){
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ){
-                    OutlinedButton(
-                        onClick = { println("Pressed!") },
-                        border = BorderStroke(0.dp, Color.Transparent),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color.Transparent   // or any colour you need
-                        ),
-                        contentPadding = PaddingValues(),
-                        modifier = Modifier
-                            .padding(end = 9.dp)
-                            .clip(shape = RoundedCornerShape(8.dp))
-                            .background(
-                                color = Color(0xFFF0F6F5),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                    ){
-                        Column(
-                            modifier = Modifier
-                                .padding(vertical = 10.dp, horizontal = 12.dp)
-                        ){
-                            val request = ImageRequest.Builder(LocalContext.current)
-                                .data("https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/45f73769-d424-4384-b037-024705a4f811")
-                                .crossfade(true)
-                                .build()
-                            CoilImage(
-                                imageModel = {request},
-                                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                                modifier = Modifier
-                                    .clip(shape = RoundedCornerShape(8.dp))
-                                    .width(26.dp)
-                                    .height(31.dp)
-                            )
-                        }
-                    }
-                    Column(
-                    ){
-                        Text("Paypal",
-                            color = Color(0xFF000000),
-                            fontSize = 16.sp,
-                            modifier = Modifier
-                                .padding(bottom = 6.dp, end = 32.dp)
-                        )
-                        Text(
-                            "Jan 30, 2022",
-                            color = Color(0xFF666666),
-                            fontSize = 13.sp,
-                        )
-                    }
-                }
-                Text(
-                    "+ $ 1,406.00",
-                    color = Color(0xFF24A869),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(bottom = 30.dp, start = 22.dp, end = 22.dp)
-                    .fillMaxWidth()
-            ){
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ){
-                    OutlinedButton(
-                        onClick = { println("Pressed!") },
-                        border = BorderStroke(0.dp, Color.Transparent),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color.Transparent   // or any colour you need
-                        ),
-                        contentPadding = PaddingValues(),
-                        modifier = Modifier
-                            .padding(end = 9.dp)
-                            .clip(shape = RoundedCornerShape(8.dp))
-                            .background(
-                                color = Color(0xFFF0F6F5),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                    ){
-                        Column(
-                            modifier = Modifier
-                                .padding(vertical = 8.dp, horizontal = 7.dp)
-                        ){
-                            val request = ImageRequest.Builder(LocalContext.current)
-                                .data("https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/67addca7-1d4d-4a01-95d5-7e21252d89e0")
-                                .crossfade(true)
-                                .build()
-                            CoilImage(
-                                imageModel = {request},
-                                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                                modifier = Modifier
-                                    .clip(shape = RoundedCornerShape(8.dp))
-                                    .width(35.dp)
-                                    .height(35.dp)
-                            )
-                        }
-                    }
-                    Column(
-                    ){
-                        Text("Youtube",
-                            color = Color(0xFF000000),
-                            fontSize = 16.sp,
-                            modifier = Modifier
-                                .padding(bottom = 6.dp, end = 16.dp)
-                        )
-                        Text(
-                            "Jan 16, 2022",
-                            color = Color(0xFF666666),
-                            fontSize = 13.sp,
-                        )
-                    }
-                }
-                Text(
-                    "- $ 11.99",
-                    color = Color(0xFFF95B51),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(bottom = 15.dp, start = 22.dp, end = 22.dp)
-                    .fillMaxWidth()
-            ){
-                Text(
-                    "Send Again",
-                    color = Color(0xFF222222),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    "See all",
-                    color = Color(0xFF666666),
-                    fontSize = 14.sp,
-                )
-            }
-            Box{
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ){
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                    ){
-                        val request = ImageRequest.Builder(LocalContext.current)
-                            .data("https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/5e179dfd-69fc-40ad-a0ba-033ba519cfde")
-                            .crossfade(true)
-                            .build()
-                        CoilImage(
-                            imageModel = {request},
-                            imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                            modifier = Modifier
-                                .padding(start = 22.dp)
-                                .width(62.dp)
-                                .height(62.dp)
-                        )
 
-                        CoilImage(
-                            imageModel = {request},
-                            imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                            modifier = Modifier
-                                .padding(start = 99.dp)
-                                .width(62.dp)
-                                .height(62.dp)
-                        )
-                        Column(
-                            horizontalAlignment = Alignment.End,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                        ){
-                            val request = ImageRequest.Builder(LocalContext.current)
-                                .data("https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/a729e65c-eef3-46ad-9310-544cb8dd59dd")
-                                .crossfade(true)
-                                .build()
-                            CoilImage(
-                                imageModel = {request},
-                                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                                modifier = Modifier
-                                    .padding(end = 96.dp)
-                                    .width(62.dp)
-                                    .height(62.dp)
-                            )
-                        }
-                        Column(
-                            horizontalAlignment = Alignment.End,
-                            modifier = Modifier
-                                .padding(bottom = 9.dp)
-                                .fillMaxWidth()
-                        ){
-                            val request = ImageRequest.Builder(LocalContext.current)
-                                .data("https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/c29c8028-a78e-4a2a-9d53-1effd0240191")
-                                .crossfade(true)
-                                .build()
-                            CoilImage(
-                                imageModel = {request},
-                                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                                modifier = Modifier
-                                    .padding(end = 18.dp)
-                                    .width(62.dp)
-                                    .height(62.dp)
-                            )
-                        }
-
-                        CoilImage(
-                            imageModel = {request},
-                            imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                            modifier = Modifier
-                                .height(80.dp)
-                                .fillMaxWidth()
-                        )
-                    }
-                }
-                val request = ImageRequest.Builder(LocalContext.current)
-                    .data("https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/e8768201-c066-450f-b52f-a3a18cf3fd68")
-                    .crossfade(true)
-                    .build()
-                CoilImage(
-                    imageModel = {request},
-                    imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                    modifier = Modifier
-                        .offset(x = 169.dp, y = 30.dp)
-                        .align(Alignment.TopStart)
-                        .padding(start = 169.dp, bottom = 30.dp)
-                        .height(78.dp)
-                        .fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                BalanceInfoItem(
+                    icon = R.drawable.income,
+                    label = "Income",
+                    amount = "$${balance.income}"
                 )
-                CoilImage(
-                    imageModel = {request},
-                    imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                    modifier = Modifier
-                        .offset(x = 177.dp, y = 0.dp)
-                        .align(Alignment.TopStart)
-                        .padding(start = 177.dp)
-                        .height(62.dp)
-                        .fillMaxWidth()
+                BalanceInfoItem(
+                    icon = R.drawable.expense,
+                    label = "Expenses",
+                    amount = "$${balance.expense}"
                 )
             }
         }
     }
+}
+@Composable
+fun BalanceInfoItem(icon: Int, label: String, amount: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(10.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = icon),
+            contentDescription = label,
+            tint = Color.White
+        )
+        Text(
+            text = label,
+            color = Color.White,
+            fontSize = 14.sp
+        )
+        Text(
+            text = amount,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun TransactionHistorySection() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Transactions History",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Text(
+                text = "See all",
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
+        }
+
+        TransactionItem(
+            icon = R.drawable.upwork,
+            title = "Upwork",
+            date = "Today",
+            amount = "+$850.00",
+            isIncome = true
+        )
+        TransactionItem(
+            icon = R.drawable.transfer,
+            title = "Transfer",
+            date = "Yesterday",
+            amount = "-$85.00",
+            isIncome = false
+        )
+    }
+}
+
+@Composable
+fun TransactionItem(icon: Int, title: String, date: String, amount: String, isIncome: Boolean) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = title,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFF0F6F5))
+                    .padding(10.dp)
+            )
+            Column(
+                modifier = Modifier.padding(start = 10.dp)
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 16.sp,
+                    color = Color.Black
+                )
+                Text(
+                    text = date,
+                    fontSize = 13.sp,
+                    color = Color.Gray
+                )
+            }
+        }
+        Text(
+            text = amount,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (isIncome) Color(0xFF24A869) else Color(0xFFF95B51)
+        )
+    }
+}
+
+@Composable
+fun SendAgainSection() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Send Again",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Text(
+                text = "See all",
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            UserAvatarItem(R.drawable.user1)
+            UserAvatarItem(R.drawable.user2)
+            UserAvatarItem(R.drawable.user3)
+            UserAvatarItem(R.drawable.user4)
+            UserAvatarItem(R.drawable.user5)
+        }
+    }
+}
+
+@Composable
+private fun GreetingBar(userName: String) {
+
+    val hour = remember {
+        Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+    }
+
+    val greeting = when (hour) {
+        in 5..11 -> "Good morning"
+        in 12..17 -> "Good afternoon"
+        in 18..21 -> "Good evening"
+        else -> "Good night"
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "$greeting, $userName 👋",
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.Black
+        )
+        NotificationIcon()
+    }
+}
+
+@Composable
+private fun NotificationIcon(
+    notificationCount: Int = 0,
+    onClick: () -> Unit = {}
+) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.TopEnd
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.notification),
+            contentDescription = "Notifications",
+            tint = Color.Black,
+            modifier = Modifier.align(Alignment.Center)
+        )
+
+        if (notificationCount > 0) {
+            Box(
+                modifier = Modifier
+                    .offset(x = 8.dp, y = (-4).dp)
+                    .size(16.dp)
+                    .background(Color.Red, shape = CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = notificationCount.toString(),
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun UserAvatarItem(icon: Int) {
+    Icon(
+        painter = painterResource(id = icon),
+        contentDescription = "User",
+        modifier = Modifier
+            .clip(CircleShape)
+            .size(62.dp)
+    )
 }

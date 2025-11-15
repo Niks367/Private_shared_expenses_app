@@ -1,0 +1,20 @@
+{
+  "users": [
+    {
+      "id": "alice",
+      "balance": {
+        "total": 2548.00,
+        "income": 1840.00,
+        "expense": 284.00
+      }
+    },
+    {
+      "id": "bob",
+      "balance": {
+        "total": 1234.56,
+        "income": 800.00,
+        "expense": 100.00
+      }
+    }
+  ]
+}
