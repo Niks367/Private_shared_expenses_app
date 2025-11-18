@@ -1,63 +1,208 @@
 package com.example.myapplication.ui
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.myapplication.model.User
+import com.example.myapplication.ui.theme.*
 
-// This is the main Composable for the profile screen
 @Composable
-fun ProfileScreen(user: User) {
-    // These 'remember' states will hold the text field values
-    var username by remember { mutableStateOf(user.username) }
-    var email by remember { mutableStateOf(user.email) }
+fun ProfileScreen(
+    user: User,
+    onBackClick: () -> Unit = {},
+    onPersonalInfoClick: () -> Unit = {},
+    onBillingAccountClick: () -> Unit = {},
+    onLogoutClick: () -> Unit = {}
+) {
+    // Get initials for avatar
+    val initials = user.username
+        .split(" ")
+        .take(2)
+        .mapNotNull { it.firstOrNull()?.uppercase() }
+        .joinToString("")
+        .take(2)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .background(White)
+            .verticalScroll(rememberScrollState())
     ) {
-        Text(
-            text = "Edit Your Profile",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        // Text field for the username
-        OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Username") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        // Text field for the email
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Save button
-        Button(
-            onClick = {
-                // In a real app, this is where you would save the data.
-                // For this prototype, we can just print it to the log.
-                println("Saving profile: Username=$username, Email=$email")
-            },
-            modifier = Modifier.fillMaxWidth()
+        // Top bar with back button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Save Changes")
+            TextButton(onClick = onBackClick) {
+                Text(
+                    text = "← Back",
+                    color = PrimaryTeal,
+                    fontSize = 16.sp
+                )
+            }
+        }
+
+        // Profile content
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 22.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            // Profile header card with avatar
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = PrimaryTeal,
+                        shape = RoundedCornerShape(20.dp)
+                    )
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Avatar circle with initials
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .background(White),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = initials,
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryTeal
+                    )
+                }
+
+                // Name
+                Text(
+                    text = user.username,
+                    color = White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                // Email
+                Text(
+                    text = user.email,
+                    color = LightTeal,
+                    fontSize = 16.sp
+                )
+
+                // Phone number (if available)
+                user.phone?.let { phone ->
+                    Text(
+                        text = phone,
+                        color = LightTeal,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Personal Information Button
+            Button(
+                onClick = onPersonalInfoClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimaryTeal
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Personal Information",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = White
+                    )
+                    Text(
+                        text = "→",
+                        fontSize = 20.sp,
+                        color = White
+                    )
+                }
+            }
+
+            // Billing Account Button
+            Button(
+                onClick = onBillingAccountClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimaryTeal
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Billing Account",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = White
+                    )
+                    Text(
+                        text = "→",
+                        fontSize = 20.sp,
+                        color = White
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Logout Button
+            OutlinedButton(
+                onClick = onLogoutClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = ExpenseRed
+                ),
+                border = BorderStroke(2.dp, ExpenseRed),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "Logout",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ExpenseRed
+                )
+            }
         }
     }
 }
@@ -67,8 +212,19 @@ fun ProfileScreen(user: User) {
 @Composable
 fun ProfileScreenPreview() {
     // We create a fake user for the preview
-    val fakeUser = User(userId = "123", username = "example", email = "example@example.com")
-    MaterialTheme { // It's good practice to wrap previews in your app's theme
-        ProfileScreen(user = fakeUser)
+    val fakeUser = User(
+        userId = "123",
+        username = "Jane Doe",
+        email = "jane.doe@example.com",
+        phone = "+1 234 567 8900"
+    )
+    MaterialTheme {
+        ProfileScreen(
+            user = fakeUser,
+            onBackClick = {},
+            onPersonalInfoClick = {},
+            onBillingAccountClick = {},
+            onLogoutClick = {}
+        )
     }
 }

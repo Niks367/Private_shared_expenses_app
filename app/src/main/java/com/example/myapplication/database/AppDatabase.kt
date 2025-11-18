@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.example.myapplication.dao.ProfileDao
 import com.example.myapplication.entities.Profile
 
-@Database(entities = [Profile::class], version = 1, exportSchema = false)
+@Database(entities = [Profile::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
 
@@ -20,7 +20,7 @@ abstract class AppDatabase : RoomDatabase() {
                             context.applicationContext,
                             AppDatabase::class.java,
                             "userData.db"
-                    ).fallbackToDestructiveMigration().build().also { INSTANCE = it }
+                    ).fallbackToDestructiveMigration(true).build().also { INSTANCE = it }
                 }
     }
 }
