@@ -25,7 +25,7 @@ import com.example.myapplication.database.AppDatabase
 import com.example.myapplication.entities.Profile
 import com.example.myapplication.model.User
 import com.example.myapplication.ui.BillingAccountScreen
-import com.example.myapplication.ui.HomeScreen
+import com.example.myapplication.ui.Homepage
 import com.example.myapplication.ui.LoginScreen
 import com.example.myapplication.ui.PersonalInformationScreen
 import com.example.myapplication.ui.ProfileScreen
@@ -140,9 +140,9 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            HomeScreen(
-                                user = currentUser,
-                                onProfileClick = { navController.navigate("profile/${userId}") }
+                            Homepage(
+                                userName = currentUser!!.username,
+                                userId =  currentUser!!.userId
                             )
                         }
                         composable(
