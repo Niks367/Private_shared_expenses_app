@@ -31,8 +31,14 @@ import com.example.myapplication.ui.PersonalInformationScreen
 import com.example.myapplication.ui.ProfileScreen
 import com.example.myapplication.ui.SignupScreen
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.example.myapplication.ui.Homepage
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
+
 
 class MainActivity : ComponentActivity() {
     private fun hashPassword(password: String): String {
@@ -124,27 +130,58 @@ class MainActivity : ComponentActivity() {
                                 return@composable
                             }
 
+                            // State for both the generic User and the specific Profile
                             var currentUser by remember(userId) { mutableStateOf<User?>(null) }
+                            var profile by remember(userId) { mutableStateOf<Profile?>(null) }
 
                             LaunchedEffect(userId) {
-                                val profile = database.profileDao().findById(userId)
-                                if (profile != null) {
+                                val fetchedProfile = database.profileDao().findById(userId)
+                                if (fetchedProfile != null) {
+                                    // Update both state variables once the data is fetched
+                                    profile = fetchedProfile
                                     currentUser = User(
-                                        userId = profile.id.toString(),
-                                        username = "${profile.firstName} ${profile.lastName}",
-                                        email = profile.email,
-                                        phone = profile.phone
+                                        userId = fetchedProfile.id.toString(),
+                                        username = "${fetchedProfile.firstName} ${fetchedProfile.lastName}",
+                                        email = fetchedProfile.email,
+                                        phone = fetchedProfile.phone
                                     )
                                 } else {
+                                    // If the user ID from the route is invalid, navigate back to login
                                     navController.navigate("login")
                                 }
                             }
 
-                            Homepage(
-                                userName = currentUser!!.username,
-                                userId =  currentUser!!.userId
-                            )
+                            // Use local variables for smart-casting and safety
+                            val user = currentUser
+                            val userProfile = profile
+
+                            // Only proceed if both user and profile data are loaded
+                            if (user != null && userProfile != null) {
+                                // Calculate initials from the profile data
+                                val initials = (userProfile.firstName.firstOrNull()?.toString() ?: "") +
+                                        (userProfile.lastName.firstOrNull()?.toString() ?: "")
+
+                                // Call Homepage with all the required parameters
+                                Homepage(
+                                    userName = userProfile.firstName, // Pass just the first name for the greeting
+                                    userId = user.userId,
+                                    userInitials = initials,
+                                    onProfileClick = {
+                                        navController.navigate("profile/${user.userId}")
+                                    }
+                                )
+                            } else {
+                                // Display a loading indicator while fetching data
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            }
                         }
+
+
                         composable(
                             route = "profile/{userId}",
                             arguments = listOf(navArgument("userId") { type = NavType.LongType })

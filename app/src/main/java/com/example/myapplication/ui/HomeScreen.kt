@@ -36,6 +36,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import com.example.myapplication.R
 import com.example.myapplication.ui.viewmodels.HomeViewModel
 import java.util.Calendar
@@ -44,6 +51,8 @@ import java.util.Calendar
 fun Homepage(
     userName: String,
     userId: String,
+    userInitials: String,
+    onProfileClick: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -52,7 +61,11 @@ fun Homepage(
         viewModel.fetchUserBalance(userId)
     }
     Scaffold(
-        topBar = { GreetingBar(userName = userName) },
+        topBar = { GreetingBar(
+            userName = userName,
+            userInitials = userInitials,
+            onProfileClick = onProfileClick
+        ) },
         containerColor = Color.White
     ) { innerPadding ->
         Column(
@@ -310,10 +323,12 @@ fun SendAgainSection() {
 }
 
 @Composable
-private fun GreetingBar(userName: String) {
-
-    val hour = remember {
-        Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+private fun GreetingBar(
+    userName: String,
+    userInitials: String,
+    onProfileClick: () -> Unit
+) {
+    val hour = remember {Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     }
 
     val greeting = when (hour) {
@@ -335,9 +350,36 @@ private fun GreetingBar(userName: String) {
             style = MaterialTheme.typography.bodyLarge,
             color = Color.Black
         )
-        NotificationIcon()
+        // This is the new profile button UI
+        ProfileAvatar(
+            initials = userInitials,
+            onClick = onProfileClick
+        )
     }
 }
+
+@Composable
+fun ProfileAvatar(initials: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .clickable(onClick = onClick)
+            .padding(10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = initials,
+            style = TextStyle(
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        )
+    }
+}
+
+
 
 @Composable
 private fun NotificationIcon(
