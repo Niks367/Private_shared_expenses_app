@@ -76,8 +76,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
 
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
+    implementation("androidx.compose.material:material-icons-extended-android:1.6.8")
 
     implementation(libs.landscapist)
     implementation(libs.landscapist.coil3)

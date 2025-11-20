@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.myapplication.database.AppDatabase
 import com.example.myapplication.entities.Profile
-import com.example.myapplication.ui.Homepage
+import com.example.myapplication.ui.HomeScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -45,8 +45,8 @@ class MainActivity : ComponentActivity() {
                     val initials = (userProfile.firstName.firstOrNull()?.toString() ?: "") +
                             (userProfile.lastName.firstOrNull()?.toString() ?: "")
 
-                    // Call Homepage with the real data
-                    Homepage(
+                    // Call HomeScreen with the real data
+                    HomeScreen(
                         userName = userProfile.firstName,
                         userId = userProfile.id.toString(),
                         userInitials = initials,
