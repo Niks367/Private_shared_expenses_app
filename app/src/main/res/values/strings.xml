@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">My Application</string>
+    <string name="home" />
+    <string name="statistics" />
+    <string name="card_info" />
+    <string name="profile" />
 </resources>

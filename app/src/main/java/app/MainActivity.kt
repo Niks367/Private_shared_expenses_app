@@ -6,7 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresExtension
 import androidx.compose.material3.MaterialTheme
-import com.example.myapplication.ui.Homepage
+import com.example.myapplication.ui.MainScreen
 
 class MainActivity : ComponentActivity() {
 
@@ -16,7 +16,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                Homepage("Johny", userId = "alice")
+                MainScreen("Johny", userId = "alice")
             }
         }
     }
