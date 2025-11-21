@@ -40,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.text.TextStyle
 import com.example.myapplication.R
 import com.example.myapplication.di.ServiceLocator
 import com.example.myapplication.model.Transaction
@@ -52,7 +53,7 @@ import kotlin.math.abs
 
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Composable
-fun Homepage(
+fun HomeScreen(
     userName: String,
     userId: String,
     viewModel: HomeViewModel = viewModel(
@@ -83,6 +84,7 @@ fun Homepage(
         }
     }
 }
+
 @Composable
 fun LoadingBalancePlaceholder() {
     Box(
@@ -109,6 +111,7 @@ fun ErrorBalanceView(message: String, onRetry: () -> Unit) {
         }
     }
 }
+
 @Composable
 fun BalanceCard(uiState: UiState) {
     if (uiState.isLoading) {
@@ -174,6 +177,7 @@ fun BalanceCard(uiState: UiState) {
         }
     }
 }
+
 @Composable
 fun BalanceInfoItem(icon: Int, label: String, amount: String) {
     Column(
@@ -356,6 +360,27 @@ fun GreetingBar(userName: String) {
             color = Color.Black
         )
         NotificationIcon()
+    }
+}
+
+@Composable
+fun ProfileAvatar(initials: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .clickable(onClick = onClick)
+            .padding(10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = initials,
+            style = TextStyle(
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        )
     }
 }
 

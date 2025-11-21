@@ -81,6 +81,9 @@ dependencies {
     // ---------- OTHER GOOGLE / SUPPORT ----------
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    
+    // ---------- MATERIAL ICONS (from expensesAndGroups) ----------
+    implementation("androidx.compose.material:material-icons-extended-android:1.6.8")
 
     // ---------- OPTIONAL IMAGE LIBRARIES ----------
     implementation(libs.landscapist)
