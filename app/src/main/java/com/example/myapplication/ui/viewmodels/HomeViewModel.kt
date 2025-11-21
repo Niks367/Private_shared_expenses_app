@@ -68,10 +68,19 @@ class HomeViewModel( private val repository: UserRepository) : ViewModel() {
                 val response = RetrofitClient.apiService.getUserBalance(userId)
                 if (response.isSuccessful) {
                     val userBalance = response.body()?.firstOrNull { it.id == userId }?.balance
-                    _uiState.value = UiState(
-                        isLoading = false,
-                        userBalance = userBalance as UserBalance?
-                    )
+                    if (userBalance != null) {
+                        _uiState.value = UiState(
+                            isLoading = false,
+                            userBalance = userBalance as UserBalance?
+                        )
+                    } else {
+                        // User not found in API - show empty state for new users
+                        _uiState.value = UiState(
+                            isLoading = false,
+                            userBalance = null,
+                            error = null  // No error, just empty state
+                        )
+                    }
                 } else {
                     _uiState.value = UiState(
                         isLoading = false,
@@ -79,9 +88,10 @@ class HomeViewModel( private val repository: UserRepository) : ViewModel() {
                     )
                 }
             } catch (e: Exception) {
+                // Network error - show error message with retry option
                 _uiState.value = UiState(
                     isLoading = false,
-                    error = "Failed to fetch balance: ${e.message}"
+                    error = "Unable to connect to server. Please check your connection."
                 )
             }
         }

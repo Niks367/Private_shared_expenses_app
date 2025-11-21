@@ -64,6 +64,9 @@ fun HomeScreen(
         viewModel.loadUserData(userId)
     }
     Scaffold(
+        topBar = {
+            GreetingBar(userName = userName)
+        },
         containerColor = Color.White
     ) { innerPadding ->
         Column(
@@ -74,9 +77,10 @@ fun HomeScreen(
         ) {
             val user = uiState.userBalance
             BalanceCard(uiState = uiState)
-            if (user != null) {
-                TransactionHistorySection(transactions = user.transactions)
-            }
+            
+            // Show transactions if available, otherwise show empty state
+            TransactionHistorySection(transactions = user?.transactions ?: emptyList())
+            
             SendAgainSection()
         }
     }
@@ -118,12 +122,13 @@ fun BalanceCard(uiState: UiState) {
 
     uiState.error?.let { errMsg ->
         ErrorBalanceView(message = errMsg) {
-
+            // Retry functionality could be added here
         }
         return
     }
 
-    val balance = uiState.userBalance ?: return
+    // Show default balance card for new users or when data is not available
+    val balance = uiState.userBalance
 
     Box(
         modifier = Modifier
@@ -149,7 +154,7 @@ fun BalanceCard(uiState: UiState) {
             }
 
             Text(
-                text = "$${balance.balance.total}",
+                text = "$${balance?.balance?.total ?: "0.00"}",
                 color = Color.White,
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
@@ -163,12 +168,12 @@ fun BalanceCard(uiState: UiState) {
                 BalanceInfoItem(
                     icon = R.drawable.income,
                     label = "Income",
-                    amount = "$${balance.balance.income}"
+                    amount = "$${balance?.balance?.income ?: "0.00"}"
                 )
                 BalanceInfoItem(
                     icon = R.drawable.expense,
                     label = "Expenses",
-                    amount = "$${balance.balance.expense}"
+                    amount = "$${balance?.balance?.expense ?: "0.00"}"
                 )
             }
         }
