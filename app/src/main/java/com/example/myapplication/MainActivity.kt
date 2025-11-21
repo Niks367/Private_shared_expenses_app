@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.os.Build
 import android.os.Bundle
 import android.util.Patterns
 import androidx.activity.ComponentActivity
@@ -21,6 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import android.util.Base64
+import androidx.annotation.RequiresExtension
 import com.example.myapplication.database.AppDatabase
 import com.example.myapplication.entities.Profile
 import com.example.myapplication.model.User
@@ -47,6 +49,7 @@ class MainActivity : ComponentActivity() {
         return Base64.encodeToString(bytes, Base64.NO_WRAP)
     }
 
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -165,10 +168,10 @@ class MainActivity : ComponentActivity() {
                                 Homepage(
                                     userName = userProfile.firstName, // Pass just the first name for the greeting
                                     userId = user.userId,
-                                    userInitials = initials,
-                                    onProfileClick = {
-                                        navController.navigate("profile/${user.userId}")
-                                    }
+//                                    userInitials = initials,
+//                                    onProfileClick = {
+//                                        navController.navigate("profile/${user.userId}")
+//                                    }
                                 )
                             } else {
                                 // Display a loading indicator while fetching data

@@ -1,5 +1,7 @@
 package com.example.myapplication.ui
 
+import android.os.Build
+import androidx.annotation.RequiresExtension
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,36 +38,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.background
 import com.example.myapplication.R
+import com.example.myapplication.di.ServiceLocator
+import com.example.myapplication.model.Transaction
+import com.example.myapplication.ui.viewmodels.HomeUiState
 import com.example.myapplication.ui.viewmodels.HomeViewModel
+import com.example.myapplication.ui.viewmodels.HomeViewModelFactory
+import com.example.myapplication.ui.viewmodels.UiState
 import java.util.Calendar
+import kotlin.math.abs
 
+@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Composable
 fun Homepage(
     userName: String,
     userId: String,
-    userInitials: String,
-    onProfileClick: () -> Unit,
-    viewModel: HomeViewModel = viewModel()
+    viewModel: HomeViewModel = viewModel(
+        factory = HomeViewModelFactory(ServiceLocator.userRepository)
+    )
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(userId) {
         viewModel.fetchUserBalance(userId)
+        viewModel.loadUserData(userId)
     }
     Scaffold(
-        topBar = { GreetingBar(
-            userName = userName,
-            userInitials = userInitials,
-            onProfileClick = onProfileClick
-        ) },
+        topBar = { GreetingBar(userName = userName) },
         containerColor = Color.White
     ) { innerPadding ->
         Column(
@@ -74,8 +73,11 @@ fun Homepage(
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
         ) {
+            val user = uiState.userBalance
             BalanceCard(uiState = uiState)
-            TransactionHistorySection()
+            if (user != null) {
+                TransactionHistorySection(transactions = user.transactions)
+            }
             SendAgainSection()
         }
     }
@@ -107,7 +109,7 @@ fun ErrorBalanceView(message: String, onRetry: () -> Unit) {
     }
 }
 @Composable
-fun BalanceCard(uiState: HomeViewModel.UiState) {
+fun BalanceCard(uiState: UiState) {
     if (uiState.isLoading) {
         LoadingBalancePlaceholder()
         return
@@ -120,7 +122,7 @@ fun BalanceCard(uiState: HomeViewModel.UiState) {
         return
     }
 
-    val balance = uiState.balance ?: return
+    val balance = uiState.userBalance ?: return
 
     Box(
         modifier = Modifier
@@ -146,7 +148,7 @@ fun BalanceCard(uiState: HomeViewModel.UiState) {
             }
 
             Text(
-                text = "$${balance.total}",
+                text = "$${balance.balance.total}",
                 color = Color.White,
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
@@ -160,12 +162,12 @@ fun BalanceCard(uiState: HomeViewModel.UiState) {
                 BalanceInfoItem(
                     icon = R.drawable.income,
                     label = "Income",
-                    amount = "$${balance.income}"
+                    amount = "$${balance.balance.income}"
                 )
                 BalanceInfoItem(
                     icon = R.drawable.expense,
                     label = "Expenses",
-                    amount = "$${balance.expense}"
+                    amount = "$${balance.balance.expense}"
                 )
             }
         }
@@ -197,7 +199,7 @@ fun BalanceInfoItem(icon: Int, label: String, amount: String) {
 }
 
 @Composable
-fun TransactionHistorySection() {
+fun TransactionHistorySection(transactions: List<Transaction>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -217,27 +219,31 @@ fun TransactionHistorySection() {
             Text(
                 text = "See all",
                 fontSize = 14.sp,
-                color = Color.Gray
+                color = Color.Gray,
+                modifier = Modifier.clickable { /* navigate */ }
             )
         }
 
-        TransactionItem(
-            icon = R.drawable.upwork,
-            title = "Upwork",
-            date = "Today",
-            amount = "+$850.00",
-            isIncome = true
-        )
-        TransactionItem(
-            icon = R.drawable.transfer,
-            title = "Transfer",
-            date = "Yesterday",
-            amount = "-$85.00",
-            isIncome = false
-        )
+        if (transactions.isEmpty()) {
+            Text(
+                text = "No transactions yet.",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 12.dp)
+            )
+        } else {
+            transactions.forEach { tx ->
+                TransactionItem(
+                    icon = tx.iconRes,
+                    title = tx.title,
+                    date = tx.date,
+                    amount = "${if (tx.isIncome) "+" else "-"}$${abs(tx.amount)}",
+                    isIncome = tx.isIncome
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
     }
 }
-
 @Composable
 fun TransactionItem(icon: Int, title: String, date: String, amount: String, isIncome: Boolean) {
     Row(
@@ -323,12 +329,10 @@ fun SendAgainSection() {
 }
 
 @Composable
-private fun GreetingBar(
-    userName: String,
-    userInitials: String,
-    onProfileClick: () -> Unit
-) {
-    val hour = remember {Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+private fun GreetingBar(userName: String) {
+
+    val hour = remember {
+        Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     }
 
     val greeting = when (hour) {
@@ -350,36 +354,9 @@ private fun GreetingBar(
             style = MaterialTheme.typography.bodyLarge,
             color = Color.Black
         )
-        // This is the new profile button UI
-        ProfileAvatar(
-            initials = userInitials,
-            onClick = onProfileClick
-        )
+        NotificationIcon()
     }
 }
-
-@Composable
-fun ProfileAvatar(initials: String, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.secondaryContainer)
-            .clickable(onClick = onClick)
-            .padding(10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = initials,
-            style = TextStyle(
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
-        )
-    }
-}
-
-
 
 @Composable
 private fun NotificationIcon(

@@ -6,7 +6,30 @@
         "total": 2548.00,
         "income": 1840.00,
         "expense": 284.00
-      }
+      },
+      "transactions": [
+        {
+          "icon": "upwork",
+        "title": "Upwork",
+        "date": "2025-11-19",
+          "amount": 850.00,
+          "type": "income"
+        },
+        {
+        "icon": "transfer",
+          "title": "Transfer",
+      "date": "2025-11-18",
+          "amount": -85.00,
+      "type": "expense"
+        },
+        {
+          "icon": "freelance",
+          "title": "Freelance Design",
+          "date": "2025-11-20",
+          "amount": 200.00,
+        "type": "income"
+        }
+      ]
     },
     {
       "id": "bob",
@@ -14,7 +37,8 @@
         "total": 1234.56,
         "income": 800.00,
         "expense": 100.00
-      }
+      },
+      "transactions": []
     }
   ]
 }
