@@ -1,7 +1,9 @@
 package com.example.myapplication.ui
 
 import android.os.Build
+import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresExtension
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -64,7 +66,6 @@ fun Homepage(
         viewModel.loadUserData(userId)
     }
     Scaffold(
-        topBar = { GreetingBar(userName = userName) },
         containerColor = Color.White
     ) { innerPadding ->
         Column(
@@ -329,7 +330,7 @@ fun SendAgainSection() {
 }
 
 @Composable
-private fun GreetingBar(userName: String) {
+fun GreetingBar(userName: String) {
 
     val hour = remember {
         Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
