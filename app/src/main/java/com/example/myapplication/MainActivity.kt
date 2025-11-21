@@ -269,16 +269,9 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                 val userProfile = profile
 
                 if (user != null && userProfile != null) {
-                    val initials = (userProfile.firstName.firstOrNull()?.toString() ?: "") +
-                            (userProfile.lastName.firstOrNull()?.toString() ?: "")
-
                     HomeScreen(
                         userName = userProfile.firstName,
-                        userId = user.userId,
-                        userInitials = initials,
-                        onProfileClick = {
-                            mainNavController.navigate("profile/${user.userId}")
-                        }
+                        userId = user.userId
                     )
                 } else {
                     Box(

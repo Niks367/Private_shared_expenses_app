@@ -149,9 +149,9 @@ fun MainScreen(userName: String, userId: String) {
                 )
             }
             composable(BottomNavScreen.Home.route) {
-                Homepage(
+                HomeScreen(
                     userName = userName,
-                    userId = userId,
+                    userId = userId
                 )
             }
             composable(BottomNavScreen.Statistics.route) {

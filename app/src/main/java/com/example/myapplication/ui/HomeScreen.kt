@@ -1,8 +1,6 @@
 package com.example.myapplication.ui
 
-import android.os.Build
 import androidx.annotation.DrawableRes
-import androidx.annotation.RequiresExtension
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,7 +49,6 @@ import com.example.myapplication.ui.viewmodels.UiState
 import java.util.Calendar
 import kotlin.math.abs
 
-@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Composable
 fun HomeScreen(
     userName: String,
