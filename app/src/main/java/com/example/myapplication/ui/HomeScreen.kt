@@ -61,6 +61,7 @@ fun HomeScreen(
     userId: String,
     onProfileClick: () -> Unit = {},
     localExpenses: List<com.example.myapplication.entities.Expense> = emptyList(),
+    walletTransactions: List<com.example.myapplication.entities.WalletTransaction> = emptyList(),
     walletBalance: Double = 0.0,
     viewModel: HomeViewModel = viewModel(
         factory = HomeViewModelFactory(ServiceLocator.userRepository)
@@ -75,10 +76,10 @@ fun HomeScreen(
         viewModel.loadUserData(userId)
     }
     
-    // For new users (numeric ID), use local expenses instead of API
+    // For new users (numeric ID), use local expenses and wallet transactions instead of API
     val isNewUser = userId.toIntOrNull() != null
-    val localTransactions = remember(localExpenses) {
-        localExpenses.map { expense ->
+    val localTransactions = remember(localExpenses, walletTransactions) {
+        val expenseList = localExpenses.map { expense ->
             // Convert timestamp to readable date if needed
             val readableDate = expense.date.toLongOrNull()?.let { timestamp ->
                 val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
@@ -93,6 +94,26 @@ fun HomeScreen(
                 isIncome = false
             )
         }
+        
+        val walletList = walletTransactions.map { wallet ->
+            val readableDate = wallet.date.toLongOrNull()?.let { timestamp ->
+                val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                dateFormat.format(java.util.Date(timestamp))
+            } ?: wallet.date
+            
+            val isIncome = wallet.type in listOf("add", "income")
+            
+            com.example.myapplication.model.Transaction(
+                iconRes = if (isIncome) R.drawable.income else if (wallet.type == "send") R.drawable.transfer else R.drawable.expense,
+                title = wallet.description,
+                date = readableDate,
+                amount = wallet.amount,
+                isIncome = isIncome
+            )
+        }
+        
+        // Combine and sort by date (newest first)
+        (expenseList + walletList).sortedByDescending { it.date }
     }
     
     val displayedTransactions = if (isNewUser) localTransactions else (uiState.userBalance?.transactions ?: emptyList())
@@ -129,7 +150,7 @@ fun HomeScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp)
+                        .height(200.dp)
                 ) {
                     // Large circle - bottom left
                     Box(
@@ -162,7 +183,7 @@ fun HomeScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 56.dp, bottom = 60.dp, start = 24.dp, end = 24.dp)
+                        .padding(top = 56.dp, bottom = 80.dp, start = 24.dp, end = 24.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -176,14 +197,14 @@ fun HomeScreen(
                                     in 12..16 -> "afternoon"
                                     else -> "evening"
                                 }},",
-                                fontSize = 14.sp,
+                                fontSize = 20.sp,
                                 color = Color.White,
                                 fontWeight = FontWeight.Medium
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = userName,
-                                fontSize = 20.sp,
+                                text = "$userName! 👋",
+                                fontSize = 28.sp,
                                 color = Color.White,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -795,7 +816,7 @@ fun GreetingBar(userName: String, onProfileClick: () -> Unit = {}) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "$greeting, $userName 👋",
+            text = "$greeting, $userName!👋",
             style = MaterialTheme.typography.bodyLarge,
             color = Color.Black
         )
