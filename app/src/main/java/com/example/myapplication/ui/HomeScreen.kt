@@ -119,14 +119,51 @@ fun HomeScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            // Header with gradient background
+            // Header with gradient background and decorative circles
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0xFF2F7E79))
-                    .padding(top = 56.dp, bottom = 80.dp, start = 24.dp, end = 24.dp)
             ) {
-                Column {
+                // Decorative circles in background
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                ) {
+                    // Large circle - bottom left
+                    Box(
+                        modifier = Modifier
+                            .size(212.dp)
+                            .offset(x = (-55).dp, y = (-15).dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1B5C58).copy(alpha = 0.3f))
+                    )
+                    
+                    // Medium circle - top center-left
+                    Box(
+                        modifier = Modifier
+                            .size(127.dp)
+                            .offset(x = 59.dp, y = (-15).dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF438883).copy(alpha = 0.25f))
+                    )
+                    
+                    // Small circle - top center-right
+                    Box(
+                        modifier = Modifier
+                            .size(85.dp)
+                            .offset(x = 127.dp, y = (-22).dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF5BA89E).copy(alpha = 0.2f))
+                    )
+                }
+                
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 56.dp, bottom = 80.dp, start = 24.dp, end = 24.dp)
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -209,13 +246,6 @@ fun HomeScreen(
                                     fontSize = 16.sp,
                                     color = Color.White,
                                     fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Icon(
-                                    painter = painterResource(id = R.drawable.stats),
-                                    contentDescription = null,
-                                    tint = Color.White.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(16.dp)
                                 )
                             }
                             
@@ -774,7 +804,7 @@ fun GreetingBar(userName: String, onProfileClick: () -> Unit = {}) {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            NotificationIcon()
+        NotificationIcon()
             
             // Profile Avatar - clickable to navigate to profile
             val initials = userName.take(2).uppercase()
