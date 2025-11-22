@@ -15,4 +15,7 @@ interface ProfileDao {
 
     @Insert
     suspend fun insert(profile: Profile)
+
+    @Query("SELECT * FROM profile WHERE email = :emailOrPhone OR phone = :emailOrPhone LIMIT 1")
+    suspend fun findByEmailOrPhone(emailOrPhone: String): Profile?
 }

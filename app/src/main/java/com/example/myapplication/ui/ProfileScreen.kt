@@ -26,6 +26,7 @@ fun ProfileScreen(
     onBackClick: () -> Unit = {},
     onPersonalInfoClick: () -> Unit = {},
     onBillingAccountClick: () -> Unit = {},
+    onWalletClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {}
 ) {
     // Get initials for avatar
@@ -170,6 +171,38 @@ fun ProfileScreen(
                 ) {
                     Text(
                         text = "Billing Account",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = White
+                    )
+                    Text(
+                        text = "→",
+                        fontSize = 20.sp,
+                        color = White
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Wallet Button
+            Button(
+                onClick = onWalletClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimaryTeal
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Wallet",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = White
