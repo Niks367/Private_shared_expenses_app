@@ -2,6 +2,7 @@ package com.example.myapplication.ui
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,15 +16,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,78 +66,431 @@ fun HomeScreen(
         factory = HomeViewModelFactory(ServiceLocator.userRepository)
     )
 ) {
+    // Get current time for greeting
+    val currentHour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(userId) {
         viewModel.fetchUserBalance(userId)
         viewModel.loadUserData(userId)
     }
-    Scaffold(
-        topBar = {
-            GreetingBar(
-                userName = userName,
-                onProfileClick = onProfileClick
+    
+    // For new users (numeric ID), use local expenses instead of API
+    val isNewUser = userId.toIntOrNull() != null
+    val localTransactions = remember(localExpenses) {
+        localExpenses.map { expense ->
+            // Convert timestamp to readable date if needed
+            val readableDate = expense.date.toLongOrNull()?.let { timestamp ->
+                val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                dateFormat.format(java.util.Date(timestamp))
+            } ?: expense.date
+            
+            com.example.myapplication.model.Transaction(
+                iconRes = R.drawable.expense,
+                title = expense.description,
+                date = readableDate,
+                amount = expense.amount,
+                isIncome = false
             )
-        },
-        containerColor = Color.White
-    ) { innerPadding ->
+        }
+    }
+    
+    val displayedTransactions = if (isNewUser) localTransactions else (uiState.userBalance?.transactions ?: emptyList())
+    
+    // Calculate balance from local expenses and wallet for new users
+    val totalExpense = localExpenses.sumOf { it.amount }
+    val balance = if (isNewUser) {
+        com.example.myapplication.model.BalanceDto(
+            total = walletBalance - totalExpense,
+            income = walletBalance,
+            expense = totalExpense
+        )
+    } else {
+        uiState.userBalance?.balance ?: com.example.myapplication.model.BalanceDto(0.0, 0.0, 0.0)
+    }
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(innerPadding)
         ) {
-            val user = uiState.userBalance
-            
-            // For new users (numeric ID), use local expenses instead of API
-            val isNewUser = userId.toIntOrNull() != null
-            val localTransactions = remember(localExpenses) {
-                localExpenses.map { expense ->
-                    // Convert timestamp to readable date if needed
-                    val readableDate = expense.date.toLongOrNull()?.let { timestamp ->
-                        // If date is a timestamp, convert it
-                        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                        dateFormat.format(java.util.Date(timestamp))
-                    } ?: expense.date  // If not a timestamp, use as is
-                    
-                    com.example.myapplication.model.Transaction(
-                        iconRes = R.drawable.expense,  // Use expense icon
-                        title = expense.description,
-                        date = readableDate,
-                        amount = expense.amount,
-                        isIncome = false  // Expenses are negative
-                    )
+            // Header with gradient background
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF2F7E79))
+                    .padding(top = 56.dp, bottom = 80.dp, start = 24.dp, end = 24.dp)
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Column {
+                            Text(
+                                text = "Good ${when (currentHour) {
+                                    in 0..11 -> "morning"
+                                    in 12..16 -> "afternoon"
+                                    else -> "evening"
+                                }},",
+                                fontSize = 14.sp,
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = userName,
+                                fontSize = 20.sp,
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        
+                        // Notification icon
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.White.copy(alpha = 0.06f))
+                                .clickable { /* Handle notification click */ },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.notification),
+                                contentDescription = "Notifications",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
                 }
             }
             
-            val displayedTransactions = if (isNewUser) localTransactions else (user?.transactions ?: emptyList())
-            
-            // Calculate balance from local expenses and wallet for new users
-            val totalExpense = localExpenses.sumOf { it.amount }
-            val localUiState = if (isNewUser) {
-                // Create a UserBalance from local data + wallet balance
-                uiState.copy(
-                    userBalance = com.example.myapplication.interfaces.UserBalance(
-                        id = userId,
-                        balance = com.example.myapplication.model.BalanceDto(
-                            total = walletBalance - totalExpense,
-                            income = walletBalance,
-                            expense = totalExpense
-                        ),
-                        transactions = localTransactions
+            // Balance Card (overlapping header)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = (-60).dp)
+                    .padding(horizontal = 20.dp)
+            ) {
+                // Main balance card with shadow
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFF2F7E79)
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 8.dp
                     )
-                )
-            } else {
-                uiState
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp)
+                    ) {
+                        Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Total Balance",
+                                    fontSize = 16.sp,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    painter = painterResource(id = R.drawable.stats),
+                                    contentDescription = null,
+                                    tint = Color.White.copy(alpha = 0.6f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            
+                            // Three dots menu
+                            Icon(
+                                painter = painterResource(id = R.drawable.stats),
+                                contentDescription = "More options",
+                                tint = Color.White,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clickable { /* Handle menu click */ }
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(10.dp))
+                        
+                        Text(
+                            text = "$ %.2f".format(balance.total),
+                            fontSize = 30.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        Spacer(modifier = Modifier.height(20.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            // Income
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.income),
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = "Income",
+                                        fontSize = 16.sp,
+                                        color = Color(0xFFD0E5E4),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "$ %.2f".format(balance.income),
+                                        fontSize = 20.sp,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                            
+                            // Expenses
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.End
+                                ) {
+                                    Text(
+                                        text = "Expenses",
+                                        fontSize = 16.sp,
+                                        color = Color(0xFFD0E5E4),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "$ %.2f".format(balance.expense),
+                                        fontSize = 20.sp,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.expense),
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    }
+                }
             }
             
-            BalanceCard(uiState = localUiState)
+            // Transactions History
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = (-40).dp)
+                    .padding(horizontal = 22.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Transactions History",
+                        fontSize = 18.sp,
+                        color = Color(0xFF222222),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "See all",
+                        fontSize = 14.sp,
+                        color = Color(0xFF666666),
+                        fontWeight = FontWeight.Normal
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Transaction items
+                displayedTransactions.take(4).forEach { transaction ->
+                    TransactionItem(transaction = transaction)
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                
+                if (displayedTransactions.isEmpty()) {
+                    Text(
+                        text = "No transactions yet.",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(vertical = 20.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+            }
             
-            // Show transactions
-            TransactionHistorySection(transactions = displayedTransactions)
-            
-            SendAgainSection()
+            // Send Again Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = (-20).dp)
+                    .padding(horizontal = 22.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Send Again",
+                        fontSize = 18.sp,
+                        color = Color(0xFF222222),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "See all",
+                        fontSize = 14.sp,
+                        color = Color(0xFF666666),
+                        fontWeight = FontWeight.Normal
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // User avatars row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    listOf(
+                        R.drawable.user1,
+                        R.drawable.user2,
+                        R.drawable.user3,
+                        R.drawable.user4,
+                        R.drawable.user5
+                    ).forEach { userImage ->
+                        Box(
+                            modifier = Modifier
+                                .size(62.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFF0F6F5))
+                                .clickable { /* Handle user click */ }
+                        ) {
+                            Image(
+                                painter = painterResource(id = userImage),
+                                contentDescription = "User",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(120.dp))
+            }
         }
+    }
+}
+
+@Composable
+fun TransactionItem(transaction: com.example.myapplication.model.Transaction) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { /* Handle transaction click */ },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Icon with background
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFF0F6F5)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = transaction.iconRes),
+                    contentDescription = null,
+                    modifier = Modifier.size(30.dp),
+                    tint = Color(0xFF4A9B8E)
+                )
+            }
+            
+            Spacer(modifier = Modifier.width(12.dp))
+            
+            // Title and date
+            Column {
+                Text(
+                    text = transaction.title,
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = transaction.date,
+                    fontSize = 13.sp,
+                    color = Color(0xFF666666)
+                )
+            }
+        }
+        
+        // Amount
+        Text(
+            text = if (transaction.isIncome) {
+                "+ $ %.2f".format(transaction.amount)
+            } else {
+                "- $ %.2f".format(transaction.amount)
+            },
+            fontSize = 18.sp,
+            color = if (transaction.isIncome) Color(0xFF25A969) else Color(0xFFF95B51),
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
@@ -449,7 +808,7 @@ fun ProfileAvatar(initials: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun NotificationIcon(
+fun NotificationIcon(
     notificationCount: Int = 0,
     onClick: () -> Unit = {}
 ) {
