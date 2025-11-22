@@ -1,0 +1,513 @@
+package com.example.myapplication.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import com.example.myapplication.R
+import com.example.myapplication.entities.WalletTransaction
+import java.text.NumberFormat
+import java.util.Locale
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WalletScreen(
+    balance: Double,
+    transactions: List<WalletTransaction>,
+    onBackClick: () -> Unit,
+    onAddMoney: (Double) -> Unit,
+    onPay: (String, Double) -> Unit,
+    onSend: (String, Double) -> Unit,
+    showBackButton: Boolean = true
+) {
+    var showAddMoneyDialog by remember { mutableStateOf(false) }
+    var showPayDialog by remember { mutableStateOf(false) }
+    var showSendDialog by remember { mutableStateOf(false) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Wallet",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                },
+                navigationIcon = {
+                    if (showBackButton) {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White
+                            )
+                        }
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { /* TODO: Notifications */ }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.notification),
+                            contentDescription = "Notifications",
+                            tint = Color.White
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF4A9B8E)
+                )
+            )
+        },
+        containerColor = Color(0xFFF5F5F5)
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Balance Card with gradient background
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF4A9B8E))
+                    .padding(bottom = 30.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "Total Balance",
+                        fontSize = 16.sp,
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        formatCurrency(balance),
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+
+            // Action Buttons Card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .offset(y = (-20).dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(4.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    WalletActionButton(
+                        icon = R.drawable.income,
+                        label = "Add",
+                        onClick = { showAddMoneyDialog = true }
+                    )
+                    WalletActionButton(
+                        icon = R.drawable.expense,
+                        label = "Pay",
+                        onClick = { showPayDialog = true }
+                    )
+                    WalletActionButton(
+                        icon = R.drawable.transfer,
+                        label = "Send",
+                        onClick = { showSendDialog = true }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Transactions Section
+            Text(
+                "Transactions",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+            )
+
+            if (transactions.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "No transactions yet",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                }
+            } else {
+                transactions.forEach { transaction ->
+                    WalletTransactionItem(transaction = transaction)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+
+    // Dialogs
+    if (showAddMoneyDialog) {
+        MoneyInputDialog(
+            title = "Add Money",
+            onDismiss = { showAddMoneyDialog = false },
+            onConfirm = { amount ->
+                onAddMoney(amount)
+                showAddMoneyDialog = false
+            }
+        )
+    }
+
+    if (showPayDialog) {
+        PaymentDialog(
+            title = "Pay",
+            onDismiss = { showPayDialog = false },
+            onConfirm = { recipient, amount ->
+                onPay(recipient, amount)
+                showPayDialog = false
+            }
+        )
+    }
+
+    if (showSendDialog) {
+        PaymentDialog(
+            title = "Send Money",
+            onDismiss = { showSendDialog = false },
+            onConfirm = { recipient, amount ->
+                onSend(recipient, amount)
+                showSendDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun WalletActionButton(
+    icon: Int,
+    label: String,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFF0F6F5)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = label,
+                tint = Color(0xFF4A9B8E),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            label,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF2D3748)
+        )
+    }
+}
+
+@Composable
+fun WalletTransactionItem(transaction: WalletTransaction) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Icon based on transaction type
+                val iconRes = when (transaction.type) {
+                    "income", "add" -> R.drawable.income
+                    "expense", "pay" -> R.drawable.expense
+                    "transfer", "send" -> R.drawable.transfer
+                    else -> R.drawable.expense
+                }
+                
+                val iconBg = when (transaction.type) {
+                    "income", "add" -> Color(0xFFE8F5E9)
+                    "expense", "pay" -> Color(0xFFFFEBEE)
+                    else -> Color(0xFFF0F6F5)
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(iconBg),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = Color(0xFF4A9B8E)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
+                    Text(
+                        transaction.description,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF2D3748)
+                    )
+                    Text(
+                        transaction.date,
+                        fontSize = 13.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+
+            // Amount
+            val isPositive = transaction.type in listOf("income", "add")
+            Text(
+                "${if (isPositive) "+" else "-"} ${formatCurrency(transaction.amount)}",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isPositive) Color(0xFF4CAF50) else Color(0xFFF44336)
+            )
+        }
+    }
+}
+
+@Composable
+fun MoneyInputDialog(
+    title: String,
+    onDismiss: () -> Unit,
+    onConfirm: (Double) -> Unit
+) {
+    var amount by remember { mutableStateOf("") }
+    var showError by remember { mutableStateOf(false) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { 
+                        // Only allow numbers and decimal point
+                        if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) {
+                            amount = it
+                            showError = false
+                        }
+                    },
+                    label = { Text("Amount") },
+                    prefix = { Text("$") },
+                    isError = showError && (amount.toDoubleOrNull() ?: 0.0) <= 0.0,
+                    supportingText = {
+                        if (showError && (amount.toDoubleOrNull() ?: 0.0) <= 0.0) {
+                            Text("Amount must be greater than 0", color = Color.Red)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            val amountDouble = amount.toDoubleOrNull() ?: 0.0
+                            
+                            // Validate amount
+                            if (amountDouble <= 0.0) {
+                                showError = true
+                                return@Button
+                            }
+                            
+                            onConfirm(amountDouble)
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4A9B8E)
+                        )
+                    ) {
+                        Text("Confirm")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PaymentDialog(
+    title: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String, Double) -> Unit
+) {
+    var recipient by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf("") }
+    var showError by remember { mutableStateOf(false) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                OutlinedTextField(
+                    value = recipient,
+                    onValueChange = { 
+                        recipient = it
+                        showError = false
+                    },
+                    label = { Text("Recipient/Description") },
+                    isError = showError && recipient.isBlank(),
+                    supportingText = {
+                        if (showError && recipient.isBlank()) {
+                            Text("Recipient/Description cannot be empty", color = Color.Red)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { 
+                        // Only allow numbers and decimal point
+                        if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) {
+                            amount = it
+                            showError = false
+                        }
+                    },
+                    label = { Text("Amount") },
+                    prefix = { Text("$") },
+                    isError = showError && (amount.toDoubleOrNull() ?: 0.0) <= 0.0,
+                    supportingText = {
+                        if (showError && (amount.toDoubleOrNull() ?: 0.0) <= 0.0) {
+                            Text("Amount must be greater than 0", color = Color.Red)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            val amountDouble = amount.toDoubleOrNull() ?: 0.0
+                            
+                            // Validate inputs
+                            if (recipient.isBlank() || amountDouble <= 0.0) {
+                                showError = true
+                                return@Button
+                            }
+                            
+                            onConfirm(recipient, amountDouble)
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4A9B8E)
+                        )
+                    ) {
+                        Text("Confirm")
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun formatCurrency(amount: Double): String {
+    val format = NumberFormat.getCurrencyInstance(Locale.US)
+    return format.format(amount)
+}
+

@@ -28,12 +28,28 @@ class HomeViewModel( private val repository: UserRepository) : ViewModel() {
 
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     fun loadUserData(userId: String) {
+        // Skip API call for numeric user IDs (new users from database)
+        // API only has string IDs like "alice", "bob"
+        if (userId.toIntOrNull() != null) {
+            // New user - show empty state without API call
+            _uiState.value = UiState(
+                isLoading = false,
+                error = null,
+                userBalance = null
+            )
+            return
+        }
+        
         viewModelScope.launch {
             repository.getUserBalance(userId)
                 .onStart { updateLoading(true) }
                 .catch { throwable ->
-                    updateError(throwable.localizedMessage
-                        ?: "Unexpected error")
+                    // Network error - don't show error for new users
+                    _uiState.value = UiState(
+                        isLoading = false,
+                        error = null,  // Hide error, show empty state instead
+                        userBalance = null
+                    )
                 }
                 .collect { result ->
                     result.fold(
@@ -45,8 +61,12 @@ class HomeViewModel( private val repository: UserRepository) : ViewModel() {
                             )
                         },
                         onFailure = { err ->
-                            updateError(err.localizedMessage
-                                ?: "Failed to load data")
+                            // User not found in API - normal for new users
+                            _uiState.value = UiState(
+                                isLoading = false,
+                                error = null,  // Don't show error
+                                userBalance = null  // Show empty balance
+                            )
                         }
                     )
                 }
@@ -62,6 +82,16 @@ class HomeViewModel( private val repository: UserRepository) : ViewModel() {
         )
     }
     fun fetchUserBalance(userId: String) {
+        // Skip API call for numeric user IDs (new users from database)
+        if (userId.toIntOrNull() != null) {
+            _uiState.value = UiState(
+                isLoading = false,
+                error = null,
+                userBalance = null
+            )
+            return
+        }
+        
         viewModelScope.launch {
             _uiState.value = UiState(isLoading = true)
             try {

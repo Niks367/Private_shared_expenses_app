@@ -19,16 +19,21 @@ class UserRepository(
 
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     fun getUserBalance(userId: String): Flow<Result<UserBalance>> = flow {
-        val response = api.getUserBalance(userId)
-        if (response.isSuccessful) {
-            val body = response.body()
-            val dto = body?.firstOrNull { it.id == userId }
-            if (dto != null) {
-                emit(Result.success(dto.toDomain()))
+        try {
+            val response = api.getUserBalance(userId)
+            if (response.isSuccessful) {
+                val body = response.body()
+                val dto = body?.firstOrNull { it.id == userId }
+                if (dto != null) {
+                    emit(Result.success(dto.toDomain()))
+                } else {
+                    emit(Result.failure(NoSuchElementException("User not found in API")))
+                }
             } else {
-                emit(Result.failure(NoSuchElementException("User $userId not found")))
+                emit(Result.failure(Exception("API error: ${response.message()}")))
             }
-        } else {
+        } catch (e: Exception) {
+            emit(Result.failure(e))
         }
     }.flowOn(dispatcher)
 }

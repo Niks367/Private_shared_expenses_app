@@ -10,21 +10,24 @@ import com.example.myapplication.dao.ExpenseDao
 import com.example.myapplication.dao.GroupDao
 import com.example.myapplication.dao.GroupMemberDao
 import com.example.myapplication.dao.ProfileDao
+import com.example.myapplication.dao.WalletTransactionDao
 import com.example.myapplication.entities.Expense
 import com.example.myapplication.entities.Group
 import com.example.myapplication.entities.GroupMember
 import com.example.myapplication.entities.Profile
+import com.example.myapplication.entities.WalletTransaction
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
 
-@Database(entities = [Profile::class, Group::class, GroupMember::class, Expense::class], version = 6, exportSchema = false)
+@Database(entities = [Profile::class, Group::class, GroupMember::class, Expense::class, WalletTransaction::class], version = 7, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
     abstract fun groupDao(): GroupDao
     abstract fun groupMemberDao(): GroupMemberDao
     abstract fun expenseDao(): ExpenseDao
+    abstract fun walletTransactionDao(): WalletTransactionDao
 
     companion object {
         @Volatile private var INSTANCE: AppDatabase? = null

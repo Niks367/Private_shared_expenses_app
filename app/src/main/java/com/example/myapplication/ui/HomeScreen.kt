@@ -53,6 +53,9 @@ import kotlin.math.abs
 fun HomeScreen(
     userName: String,
     userId: String,
+    onProfileClick: () -> Unit = {},
+    localExpenses: List<com.example.myapplication.entities.Expense> = emptyList(),
+    walletBalance: Double = 0.0,
     viewModel: HomeViewModel = viewModel(
         factory = HomeViewModelFactory(ServiceLocator.userRepository)
     )
@@ -65,7 +68,10 @@ fun HomeScreen(
     }
     Scaffold(
         topBar = {
-            GreetingBar(userName = userName)
+            GreetingBar(
+                userName = userName,
+                onProfileClick = onProfileClick
+            )
         },
         containerColor = Color.White
     ) { innerPadding ->
@@ -76,10 +82,53 @@ fun HomeScreen(
                 .padding(innerPadding)
         ) {
             val user = uiState.userBalance
-            BalanceCard(uiState = uiState)
             
-            // Show transactions if available, otherwise show empty state
-            TransactionHistorySection(transactions = user?.transactions ?: emptyList())
+            // For new users (numeric ID), use local expenses instead of API
+            val isNewUser = userId.toIntOrNull() != null
+            val localTransactions = remember(localExpenses) {
+                localExpenses.map { expense ->
+                    // Convert timestamp to readable date if needed
+                    val readableDate = expense.date.toLongOrNull()?.let { timestamp ->
+                        // If date is a timestamp, convert it
+                        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                        dateFormat.format(java.util.Date(timestamp))
+                    } ?: expense.date  // If not a timestamp, use as is
+                    
+                    com.example.myapplication.model.Transaction(
+                        iconRes = R.drawable.expense,  // Use expense icon
+                        title = expense.description,
+                        date = readableDate,
+                        amount = expense.amount,
+                        isIncome = false  // Expenses are negative
+                    )
+                }
+            }
+            
+            val displayedTransactions = if (isNewUser) localTransactions else (user?.transactions ?: emptyList())
+            
+            // Calculate balance from local expenses and wallet for new users
+            val totalExpense = localExpenses.sumOf { it.amount }
+            val localUiState = if (isNewUser) {
+                // Create a UserBalance from local data + wallet balance
+                uiState.copy(
+                    userBalance = com.example.myapplication.interfaces.UserBalance(
+                        id = userId,
+                        balance = com.example.myapplication.model.BalanceDto(
+                            total = walletBalance - totalExpense,
+                            income = walletBalance,
+                            expense = totalExpense
+                        ),
+                        transactions = localTransactions
+                    )
+                )
+            } else {
+                uiState
+            }
+            
+            BalanceCard(uiState = localUiState)
+            
+            // Show transactions
+            TransactionHistorySection(transactions = displayedTransactions)
             
             SendAgainSection()
         }
@@ -336,7 +385,7 @@ fun SendAgainSection() {
 }
 
 @Composable
-fun GreetingBar(userName: String) {
+fun GreetingBar(userName: String, onProfileClick: () -> Unit = {}) {
 
     val hour = remember {
         Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
@@ -361,7 +410,20 @@ fun GreetingBar(userName: String) {
             style = MaterialTheme.typography.bodyLarge,
             color = Color.Black
         )
-        NotificationIcon()
+        
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            NotificationIcon()
+            
+            // Profile Avatar - clickable to navigate to profile
+            val initials = userName.take(2).uppercase()
+            ProfileAvatar(
+                initials = initials,
+                onClick = onProfileClick
+            )
+        }
     }
 }
 

@@ -13,4 +13,10 @@ interface ExpenseDao {
 
     @Query("SELECT * FROM expenses WHERE groupId = :groupId")
     fun getExpensesForGroup(groupId: Long): Flow<List<Expense>>
+    
+    @Query("SELECT * FROM expenses WHERE paidBy = :userId ORDER BY date DESC")
+    fun getExpensesForUser(userId: Long): Flow<List<Expense>>
+    
+    @Query("SELECT * FROM expenses WHERE paidBy = :userId ORDER BY date DESC")
+    suspend fun getUserExpenses(userId: Long): List<Expense>
 }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
@@ -49,6 +50,7 @@ import com.example.myapplication.entities.Expense
 import com.example.myapplication.entities.Group
 import com.example.myapplication.entities.GroupMember
 import com.example.myapplication.entities.Profile
+import com.example.myapplication.entities.WalletTransaction
 import com.example.myapplication.model.User
 import com.example.myapplication.ui.AddExpenseScreen
 import com.example.myapplication.ui.BillingAccountScreen
@@ -62,6 +64,7 @@ import com.example.myapplication.ui.LoginScreen
 import com.example.myapplication.ui.PersonalInformationScreen
 import com.example.myapplication.ui.ProfileScreen
 import com.example.myapplication.ui.SignupScreen
+import com.example.myapplication.ui.WalletScreen
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.viewmodels.GroupDetailsViewModel
 import kotlinx.coroutines.launch
@@ -176,6 +179,7 @@ class MainActivity : ComponentActivity() {
                                 onBackClick = { navController.popBackStack() },
                                 onPersonalInfoClick = { navController.navigate("personalInfo/${user.userId}") },
                                 onBillingAccountClick = { navController.navigate("billingAccount/${user.userId}") },
+                                onWalletClick = { navController.navigate("wallet/${user.userId}") },
                                 onLogoutClick = {
                                     navController.navigate("login") {
                                         popUpTo(navController.graph.startDestinationId) { inclusive = true }
@@ -219,6 +223,67 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+                    
+                    composable(
+                        route = "wallet/{userId}",
+                        arguments = listOf(navArgument("userId") { type = NavType.LongType })
+                    ) {
+                        val walletUserId = it.arguments?.getLong("userId") ?: return@composable
+                        val walletTransactions by database.walletTransactionDao()
+                            .getTransactionsForUser(walletUserId)
+                            .collectAsState(initial = emptyList())
+                        val balance by database.walletTransactionDao()
+                            .getUserBalance(walletUserId)
+                            .collectAsState(initial = 0.0)
+                        
+                        WalletScreen(
+                            balance = balance ?: 0.0,
+                            transactions = walletTransactions,
+                            onBackClick = { navController.popBackStack() },
+                            onAddMoney = { amount: Double ->
+                                lifecycleScope.launch {
+                                    val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                                    val transaction = com.example.myapplication.entities.WalletTransaction(
+                                        userId = walletUserId,
+                                        type = "add",
+                                        description = "Add Money",
+                                        amount = amount,
+                                        date = dateFormat.format(java.util.Date())
+                                    )
+                                    database.walletTransactionDao().insert(transaction)
+                                    Toast.makeText(ctx, "Money added successfully!", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            onPay = { description: String, amount: Double ->
+                                lifecycleScope.launch {
+                                    val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                                    val transaction = com.example.myapplication.entities.WalletTransaction(
+                                        userId = walletUserId,
+                                        type = "pay",
+                                        description = description,
+                                        amount = amount,
+                                        date = dateFormat.format(java.util.Date())
+                                    )
+                                    database.walletTransactionDao().insert(transaction)
+                                    Toast.makeText(ctx, "Payment successful!", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            onSend = { recipient: String, amount: Double ->
+                                lifecycleScope.launch {
+                                    val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                                    val transaction = com.example.myapplication.entities.WalletTransaction(
+                                        userId = walletUserId,
+                                        type = "send",
+                                        description = "Send to $recipient",
+                                        amount = amount,
+                                        date = dateFormat.format(java.util.Date())
+                                    )
+                                    database.walletTransactionDao().insert(transaction)
+                                    Toast.makeText(ctx, "Money sent successfully!", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -229,6 +294,7 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val title: 
     object Home : BottomNavItem("home", Icons.Default.Home, "Home")
     object Expenses : BottomNavItem("expenses", Icons.Default.AddShoppingCart, "Expenses")
     object Groups : BottomNavItem("groups", Icons.Default.Group, "Groups")
+    object Wallet : BottomNavItem("wallet", Icons.Default.AccountBalanceWallet, "Wallet")
 }
 
 @Composable
@@ -249,6 +315,8 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
             composable(BottomNavItem.Home.route) {
                 var currentUser by remember(userId) { mutableStateOf<User?>(null) }
                 var profile by remember(userId) { mutableStateOf<Profile?>(null) }
+                val userExpenses by database.expenseDao().getExpensesForUser(userId).collectAsState(initial = emptyList())
+                val walletBalance by database.walletTransactionDao().getUserBalance(userId).collectAsState(initial = 0.0)
 
                 LaunchedEffect(userId) {
                     val fetchedProfile = database.profileDao().findById(userId)
@@ -271,7 +339,12 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                 if (user != null && userProfile != null) {
                     HomeScreen(
                         userName = userProfile.firstName,
-                        userId = user.userId
+                        userId = user.userId,
+                        onProfileClick = {
+                            mainNavController.navigate("profile/${userId}")
+                        },
+                        localExpenses = userExpenses,
+                        walletBalance = walletBalance ?: 0.0
                     )
                 } else {
                     Box(
@@ -297,6 +370,92 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                 GroupScreen(navController = navController, groups = groups) { group ->
                     navController.navigate("groupDetails/${group.id}")
                 }
+            }
+
+            composable(BottomNavItem.Wallet.route) {
+                val walletTransactions by database.walletTransactionDao()
+                    .getTransactionsForUser(userId)
+                    .collectAsState(initial = emptyList())
+                val balance by database.walletTransactionDao()
+                    .getUserBalance(userId)
+                    .collectAsState(initial = 0.0)
+                
+                // One-time migration: sync existing expenses to wallet transactions
+                LaunchedEffect(Unit) {
+                    val existingExpenses = database.expenseDao().getUserExpenses(userId)
+                    val existingWalletTxs = database.walletTransactionDao().getUserTransactions(userId)
+                    
+                    // Check if there are expenses that aren't in wallet transactions
+                    existingExpenses.forEach { expense ->
+                        val alreadyExists = existingWalletTxs.any { 
+                            it.description == expense.description && 
+                            it.amount == expense.amount && 
+                            it.date == expense.date &&
+                            it.type == "pay"
+                        }
+                        
+                        if (!alreadyExists) {
+                            // Migrate this expense to wallet transaction
+                            val walletTx = WalletTransaction(
+                                userId = userId,
+                                type = "pay",
+                                description = expense.description,
+                                amount = expense.amount,
+                                date = expense.date
+                            )
+                            database.walletTransactionDao().insert(walletTx)
+                        }
+                    }
+                }
+                
+                WalletScreen(
+                    balance = balance ?: 0.0,
+                    transactions = walletTransactions,
+                    onBackClick = { /* No back button in bottom nav */ },
+                    showBackButton = false,
+                    onAddMoney = { amount: Double ->
+                        scope.launch {
+                            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                            val transaction = com.example.myapplication.entities.WalletTransaction(
+                                userId = userId,
+                                type = "add",
+                                description = "Add Money",
+                                amount = amount,
+                                date = dateFormat.format(java.util.Date())
+                            )
+                            database.walletTransactionDao().insert(transaction)
+                            Toast.makeText(context, "Money added successfully!", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onPay = { description: String, amount: Double ->
+                        scope.launch {
+                            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                            val transaction = com.example.myapplication.entities.WalletTransaction(
+                                userId = userId,
+                                type = "pay",
+                                description = description,
+                                amount = amount,
+                                date = dateFormat.format(java.util.Date())
+                            )
+                            database.walletTransactionDao().insert(transaction)
+                            Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onSend = { recipient: String, amount: Double ->
+                        scope.launch {
+                            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                            val transaction = com.example.myapplication.entities.WalletTransaction(
+                                userId = userId,
+                                type = "send",
+                                description = "Send to $recipient",
+                                amount = amount,
+                                date = dateFormat.format(java.util.Date())
+                            )
+                            database.walletTransactionDao().insert(transaction)
+                            Toast.makeText(context, "Money sent successfully!", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
             }
 
             composable("createGroup") {
@@ -349,6 +508,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     groupId = groupId,
                     onAddExpense = { gId, description, amount, date ->
                         scope.launch {
+                            // Add to Expense table (for groups)
                             val newExpense = Expense(
                                 groupId = gId,
                                 paidBy = userId,
@@ -357,6 +517,17 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                                 date = date
                             )
                             database.expenseDao().insert(newExpense)
+                            
+                            // Also add to WalletTransaction (to update wallet balance)
+                            val walletTransaction = WalletTransaction(
+                                userId = userId,
+                                type = "pay",
+                                description = description,
+                                amount = amount,
+                                date = date
+                            )
+                            database.walletTransactionDao().insert(walletTransaction)
+                            
                             Toast.makeText(context, "Expense added", Toast.LENGTH_SHORT).show()
                             navController.popBackStack()
                         }
@@ -392,7 +563,8 @@ fun AppBottomNavigation(navController: NavHostController) {
     val items = listOf(
         BottomNavItem.Home,
         BottomNavItem.Expenses,
-        BottomNavItem.Groups
+        BottomNavItem.Groups,
+        BottomNavItem.Wallet
     )
 
     NavigationBar {
