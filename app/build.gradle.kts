@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.ads.mobile.sdk)
     implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.material3)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // ---------- NAVIGATION ----------

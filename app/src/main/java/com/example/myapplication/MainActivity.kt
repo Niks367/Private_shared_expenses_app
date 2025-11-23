@@ -342,9 +342,6 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     HomeScreen(
                         userName = userProfile.firstName,
                         userId = user.userId,
-                        onProfileClick = {
-                            mainNavController.navigate("profile/${userId}")
-                        },
                         localExpenses = userExpenses,
                         walletTransactions = walletTransactions,
                         walletBalance = walletBalance ?: 0.0
@@ -441,7 +438,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     onSend = { recipient: String, amount: Double ->
                         scope.launch {
                             val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                            val transaction = com.example.myapplication.entities.WalletTransaction(
+                            val transaction = WalletTransaction(
                                 userId = userId,
                                 type = "send",
                                 description = "Send to $recipient",
