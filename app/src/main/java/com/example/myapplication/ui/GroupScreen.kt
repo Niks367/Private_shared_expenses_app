@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.entities.Group
 import com.example.myapplication.ui.theme.PrimaryTeal
 import com.example.myapplication.ui.theme.White
@@ -36,7 +34,7 @@ fun GroupScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // HEADER (copied style from ProfileScreen)
+            // HEADER
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -44,7 +42,7 @@ fun GroupScreen(
                     .background(PrimaryTeal)
             ) {
 
-                // Decorative circles (same as profile)
+                // Decorative circles
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -73,41 +71,43 @@ fun GroupScreen(
                     )
                 }
 
-                // Top bar (same layout as Profile)
-                Row(
+                // TOP BAR with centered title
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 56.dp, start = 24.dp, end = 24.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(top = 56.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Text("←", color = White, fontSize = 28.sp)
-                    }
-
                     Text(
                         text = "Groups",
                         color = White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold
                     )
+                }
 
-                    // Removed the bell icon → keep this empty space
-                    Box(modifier = Modifier.size(24.dp))
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier
+                        .padding(top = 56.dp, start = 24.dp)
+                        .align(Alignment.TopStart)
+                ) {
+                    Text("←", color = White, fontSize = 28.sp)
                 }
             }
 
-            // BODY CONTENT (overlapping)
+            // BODY CONTENT
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset(y = (-120).dp),
+                    .offset(y = (-130).dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // Avatar circle with emoji
+                // ICON (moved further up into header)
                 Box(
                     modifier = Modifier
+                        .offset(y = (-35).dp)
                         .size(120.dp)
                         .clip(CircleShape)
                         .background(White),
@@ -116,7 +116,7 @@ fun GroupScreen(
                     Text(text = "👥", fontSize = 48.sp)
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp)) // ⬅️ was 10.dp
 
                 Text(
                     text = "Your Groups",
@@ -126,7 +126,7 @@ fun GroupScreen(
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                // Create Group Button (same color as profile header)
+                // Create Group Button
                 Button(
                     onClick = { navController.navigate("createGroup") },
                     modifier = Modifier
@@ -189,14 +189,4 @@ fun GroupListItem(group: Group, onClick: () -> Unit) {
             Text(group.description, fontSize = 14.sp, color = Color.Gray)
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GroupScreenPreview() {
-    val sampleGroups = listOf(
-        Group(1, "School Group", "Friends from school"),
-        Group(2, "Work Team", "Colleagues from office")
-    )
-    GroupScreen(rememberNavController(), sampleGroups, {})
 }

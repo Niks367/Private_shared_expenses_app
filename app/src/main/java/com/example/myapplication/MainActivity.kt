@@ -570,14 +570,15 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                 val viewModel: GroupDetailsViewModel = viewModel(
                     factory = GroupDetailsViewModel.Factory(database, groupId)
                 )
+
                 GroupDetailsScreen(
-                    groupId = groupId, 
-                    onAddExpense = {
-                        navController.navigate("addExpense/$groupId")
-                    }, 
-                    viewModel = viewModel
+                    groupId = groupId,
+                    onAddExpense = { navController.navigate("addExpense/$groupId") },
+                    viewModel = viewModel,
+                    navController = navController   // ← ⭐ THIS FIXES THE BACK ARROW
                 )
             }
+
         }
     }
 }
