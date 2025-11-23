@@ -58,25 +58,25 @@ fun WalletScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp)
+                    .height(320.dp)
             ) {
                 // Curved background using Canvas
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(280.dp)
+                        .height(320.dp)
                 ) {
                     val width = size.width
                     val height = size.height
                     
                     val path = Path().apply {
                         moveTo(0f, 0f)
-                        lineTo(0f, height - 60f)
+                        lineTo(0f, height - 80f)
                         
-                        // Curve di bagian bawah
+                        // Curve di bagian bawah - lebih melengkung
                         quadraticBezierTo(
-                            width / 2f, height + 20f,  // Control point
-                            width, height - 60f         // End point
+                            width / 2f, height + 40f,  // Control point lebih rendah
+                            width, height - 80f         // End point
                         )
                         
                         lineTo(width, 0f)
@@ -164,7 +164,7 @@ fun WalletScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
-                        .padding(top = 130.dp),
+                        .padding(top = 140.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -183,12 +183,12 @@ fun WalletScreen(
                 }
             }
 
-            // Action Buttons Card
+            // Action Buttons Card - naik lebih tinggi
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
-                    .offset(y = (-20).dp),
+                    .offset(y = (-60).dp),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(4.dp)
@@ -217,7 +217,7 @@ fun WalletScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(-30.dp))
 
             // Transactions Section
             Text(
