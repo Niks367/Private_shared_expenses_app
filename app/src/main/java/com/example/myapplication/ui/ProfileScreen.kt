@@ -125,7 +125,7 @@ fun ProfileScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset(y = (-80).dp)
+                    .offset(y = (-120).dp)
             ) {
                 // User avatar (overlapping header)
                 Column(

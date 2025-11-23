@@ -545,7 +545,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     groupId = groupId,
                     onAddExpense = { gId, description, amount, date ->
                         scope.launch {
-                            // Add to Expense table (for groups)
+                            // Add to Expense table only (balance calculated from expenses)
                             val newExpense = Expense(
                                 groupId = gId,
                                 paidBy = userId,
@@ -554,16 +554,6 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                                 date = date
                             )
                             database.expenseDao().insert(newExpense)
-                            
-                            // Also add to WalletTransaction (to update wallet balance)
-                            val walletTransaction = WalletTransaction(
-                                userId = userId,
-                                type = "pay",
-                                description = description,
-                                amount = amount,
-                                date = date
-                            )
-                            database.walletTransactionDao().insert(walletTransaction)
                             
                             Toast.makeText(context, "Expense added", Toast.LENGTH_SHORT).show()
                             navController.popBackStack()
