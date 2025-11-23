@@ -195,8 +195,52 @@ fun BillingAccountScreen(
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 
-                // Card Preview
-                Card(
+                // Content based on selected tab
+                if (selectedTab == 0) {
+                    // Cards Tab Content
+                    CardsTabContent(
+                        cardNumber = cardNumber,
+                        onCardNumberChange = { cardNumber = it },
+                        cardHolder = cardHolder,
+                        onCardHolderChange = { cardHolder = it },
+                        expiryDate = expiryDate,
+                        onExpiryDateChange = { expiryDate = it },
+                        cvv = cvv,
+                        onCvvChange = { cvv = it },
+                        zip = zip,
+                        onZipChange = { zip = it },
+                        userName = userName,
+                        onSaveClick = onSaveClick
+                    )
+                } else {
+                    // Accounts Tab Content
+                    AccountsTabContent()
+                }
+                
+                Spacer(modifier = Modifier.height(40.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun CardsTabContent(
+    cardNumber: String,
+    onCardNumberChange: (String) -> Unit,
+    cardHolder: String,
+    onCardHolderChange: (String) -> Unit,
+    expiryDate: String,
+    onExpiryDateChange: (String) -> Unit,
+    cvv: String,
+    onCvvChange: (String) -> Unit,
+    zip: String,
+    onZipChange: (String) -> Unit,
+    userName: String,
+    onSaveClick: (String, String, String, String) -> Unit
+) {
+    Column {
+        // Card Preview
+        Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp),
@@ -324,7 +368,7 @@ fun BillingAccountScreen(
                 // NAME ON CARD
                 OutlinedTextField(
                     value = cardHolder,
-                    onValueChange = { cardHolder = it },
+                    onValueChange = onCardHolderChange,
                     label = { Text("NAME ON CARD", fontSize = 12.sp) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -345,7 +389,7 @@ fun BillingAccountScreen(
                 ) {
                     OutlinedTextField(
                         value = cardNumber,
-                        onValueChange = { cardNumber = it },
+                        onValueChange = onCardNumberChange,
                         label = { Text("DEBIT CARD NUMBER", fontSize = 12.sp) },
                         modifier = Modifier.weight(2f),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -359,7 +403,7 @@ fun BillingAccountScreen(
                     
                     OutlinedTextField(
                         value = cvv,
-                        onValueChange = { cvv = it },
+                        onValueChange = onCvvChange,
                         label = { Text("CVC", fontSize = 12.sp) },
                         modifier = Modifier.weight(1f),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -381,7 +425,7 @@ fun BillingAccountScreen(
                 ) {
                     OutlinedTextField(
                         value = expiryDate,
-                        onValueChange = { expiryDate = it },
+                        onValueChange = onExpiryDateChange,
                         label = { Text("EXPIRATION MM/YY", fontSize = 12.sp) },
                         modifier = Modifier.weight(1f),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -396,7 +440,7 @@ fun BillingAccountScreen(
                     
                     OutlinedTextField(
                         value = zip,
-                        onValueChange = { zip = it },
+                        onValueChange = onZipChange,
                         label = { Text("ZIP", fontSize = 12.sp) },
                         modifier = Modifier.weight(1f),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -411,28 +455,207 @@ fun BillingAccountScreen(
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 
-                // Save button (maintain original functionality)
-                Button(
-                    onClick = {
-                        onSaveClick(cardNumber, cardHolder, expiryDate, cvv)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryTeal
-                    ),
-                    shape = RoundedCornerShape(12.dp)
+        // Save button (maintain original functionality)
+        Button(
+            onClick = {
+                onSaveClick(cardNumber, cardHolder, expiryDate, cvv)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = PrimaryTeal
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(
+                text = "Add Card",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = White
+            )
+        }
+    }
+}
+
+@Composable
+private fun AccountsTabContent() {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Bank Link Option
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFE8F0EF)
+            ),
+            elevation = CardDefaults.cardElevation(0.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Add Card",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = White
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(White),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "🏦",
+                            fontSize = 24.sp
+                        )
+                    }
+                    
+                    Column {
+                        Text(
+                            text = "Bank Link",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF2D3748)
+                        )
+                        Text(
+                            text = "Connect your bank in 2 mins x fund",
+                            fontSize = 13.sp,
+                            color = Color(0xFF718096)
+                        )
+                    }
                 }
                 
-                Spacer(modifier = Modifier.height(40.dp))
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(White),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "→",
+                        fontSize = 18.sp,
+                        color = PrimaryTeal,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+        
+        // Microdeposits Option
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFF7F7F7)
+            ),
+            elevation = CardDefaults.cardElevation(0.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE0E0E0)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "$",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF666666)
+                        )
+                    }
+                    
+                    Column {
+                        Text(
+                            text = "Microdeposits",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF2D3748)
+                        )
+                        Text(
+                            text = "Connect bank in 5-7 days",
+                            fontSize = 13.sp,
+                            color = Color(0xFF718096)
+                        )
+                    }
+                }
+            }
+        }
+        
+        // Paypal Option
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFF7F7F7)
+            ),
+            elevation = CardDefaults.cardElevation(0.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE0E0E0)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "P",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF003087)
+                        )
+                    }
+                    
+                    Column {
+                        Text(
+                            text = "Paypal",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF2D3748)
+                        )
+                        Text(
+                            text = "Connect you paypal account",
+                            fontSize = 13.sp,
+                            color = Color(0xFF718096)
+                        )
+                    }
+                }
             }
         }
     }
