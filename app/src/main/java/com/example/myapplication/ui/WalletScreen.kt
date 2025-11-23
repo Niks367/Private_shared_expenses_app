@@ -1,5 +1,6 @@
 package com.example.myapplication.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,7 +15,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,61 +44,127 @@ fun WalletScreen(
     var showPayDialog by remember { mutableStateOf(false) }
     var showSendDialog by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Wallet",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                },
-                navigationIcon = {
-                    if (showBackButton) {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { /* TODO: Notifications */ }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.notification),
-                            contentDescription = "Notifications",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF4A9B8E)
-                )
-            )
-        },
-        containerColor = Color(0xFFF5F5F5)
-    ) { paddingValues ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Balance Card with gradient background
+            // Header with curved bottom
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF4A9B8E))
-                    .padding(bottom = 30.dp)
+                    .height(280.dp)
             ) {
+                // Curved background using Canvas
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(280.dp)
+                ) {
+                    val width = size.width
+                    val height = size.height
+                    
+                    val path = Path().apply {
+                        moveTo(0f, 0f)
+                        lineTo(0f, height - 60f)
+                        
+                        // Curve di bagian bawah
+                        quadraticBezierTo(
+                            width / 2f, height + 20f,  // Control point
+                            width, height - 60f         // End point
+                        )
+                        
+                        lineTo(width, 0f)
+                        close()
+                    }
+                    
+                    drawPath(
+                        path = path,
+                        color = Color(0xFF4A9B8E),
+                        style = Fill
+                    )
+                }
+                
+                // Decorative circles in background
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                ) {
+                    // Large circle - bottom left
+                    Box(
+                        modifier = Modifier
+                            .size(212.dp)
+                            .offset(x = (-55).dp, y = (-15).dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF357A6E).copy(alpha = 0.3f))
+                    )
+                    
+                    // Medium circle - top center-left
+                    Box(
+                        modifier = Modifier
+                            .size(127.dp)
+                            .offset(x = 59.dp, y = (-15).dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF5AA99A).copy(alpha = 0.25f))
+                    )
+                    
+                    // Small circle - top center-right
+                    Box(
+                        modifier = Modifier
+                            .size(85.dp)
+                            .offset(x = 127.dp, y = (-22).dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF6FBDAD).copy(alpha = 0.2f))
+                    )
+                }
+                
+                // Top bar content
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 56.dp, start = 24.dp, end = 24.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (showBackButton) {
+                        IconButton(onClick = onBackClick) {
+                            Text(
+                                text = "←",
+                                color = Color.White,
+                                fontSize = 28.sp
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.width(48.dp))
+                    }
+                    
+                    Text(
+                        text = "Wallet",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    
+                    IconButton(onClick = { /* TODO: Notifications */ }) {
+                        Text(
+                            text = "🔔",
+                            fontSize = 24.sp
+                        )
+                    }
+                }
+                
+                // Balance info in header
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                        .padding(horizontal = 24.dp)
+                        .padding(top = 130.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(

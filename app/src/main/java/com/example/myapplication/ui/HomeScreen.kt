@@ -3,6 +3,7 @@ package com.example.myapplication.ui
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresExtension
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,7 +52,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -149,25 +153,25 @@ fun HomeScreen(
             userId = userId,
             onDismiss = { showTransferDialog = false },
             onTransferSent = { recipient, amount ->
-                coroutineScope.launch {
-                    val dateFormat = java.text.SimpleDateFormat(
-                        "yyyy-MM-dd",
-                        java.util.Locale.getDefault()
-                    )
+                coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
                     val transaction = WalletTransaction(
-                        userId = userId.toLong(),
-                        type = "send",
-                        description = "Send to $recipient",
-                        amount = amount,
-                        date = dateFormat.format(java.util.Date())
+                        0,
+                        userId.toLong(),
+                        "send",
+                        "Send to $recipient",
+                        amount,
+                        dateFormat.format(java.util.Date())
                     )
                     database.walletTransactionDao().insert(transaction)
 
-                    Toast.makeText(
-                        context,
-                        "Money sent successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            "Money sent successfully!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
                 showTransferDialog = false
             }
@@ -344,14 +348,44 @@ fun BalanceCard(uiState: UiState, balance: BalanceDto, userName: String) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF2F7E79))
+                .height(240.dp)
         ) {
+            // Curved background using Canvas
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(240.dp)
+            ) {
+                val width = size.width
+                val height = size.height
+                
+                val path = Path().apply {
+                    moveTo(0f, 0f)
+                    lineTo(0f, height - 60f)
+                    
+                    // Curve di bagian bawah
+                    quadraticBezierTo(
+                        width / 2f, height + 20f,  // Control point (tengah, lebih rendah)
+                        width, height - 60f         // End point (kanan)
+                    )
+                    
+                    lineTo(width, 0f)
+                    close()
+                }
+                
+                drawPath(
+                    path = path,
+                    color = Color(0xFF2F7E79),
+                    style = Fill
+                )
+            }
+            
+            // Decorative circles
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
             ) {
-
                 Box(
                     modifier = Modifier
                         .size(212.dp)

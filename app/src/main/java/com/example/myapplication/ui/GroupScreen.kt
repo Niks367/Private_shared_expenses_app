@@ -1,5 +1,6 @@
 package com.example.myapplication.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,7 +15,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -36,15 +40,43 @@ fun GroupScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // HEADER (copied style from ProfileScreen)
+            // HEADER with curved bottom
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(287.dp)
-                    .background(PrimaryTeal)
+                    .height(240.dp)
             ) {
+                // Curved background using Canvas
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(240.dp)
+                ) {
+                    val width = size.width
+                    val height = size.height
+                    
+                    val path = Path().apply {
+                        moveTo(0f, 0f)
+                        lineTo(0f, height - 60f)
+                        
+                        // Curve di bagian bawah
+                        quadraticBezierTo(
+                            width / 2f, height + 20f,  // Control point
+                            width, height - 60f         // End point
+                        )
+                        
+                        lineTo(width, 0f)
+                        close()
+                    }
+                    
+                    drawPath(
+                        path = path,
+                        color = PrimaryTeal,
+                        style = Fill
+                    )
+                }
 
-                // Decorative circles (same as profile)
+                // Decorative circles in background
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -73,7 +105,7 @@ fun GroupScreen(
                     )
                 }
 
-                // Top bar (same layout as Profile)
+                // Top bar
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -92,7 +124,7 @@ fun GroupScreen(
                         fontWeight = FontWeight.SemiBold
                     )
 
-                    // Removed the bell icon → keep this empty space
+                    // Keep this empty space for alignment
                     Box(modifier = Modifier.size(24.dp))
                 }
             }
@@ -101,7 +133,7 @@ fun GroupScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset(y = (-120).dp),
+                    .offset(y = (-80).dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
