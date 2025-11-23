@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -179,7 +180,6 @@ class MainActivity : ComponentActivity() {
                                 onBackClick = { navController.popBackStack() },
                                 onPersonalInfoClick = { navController.navigate("personalInfo/${user.userId}") },
                                 onBillingAccountClick = { navController.navigate("billingAccount/${user.userId}") },
-                                onWalletClick = { navController.navigate("wallet/${user.userId}") },
                                 onLogoutClick = {
                                     navController.navigate("login") {
                                         popUpTo(navController.graph.startDestinationId) { inclusive = true }
@@ -295,6 +295,7 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val title: 
     object Expenses : BottomNavItem("expenses", Icons.Default.AddShoppingCart, "Expenses")
     object Groups : BottomNavItem("groups", Icons.Default.Group, "Groups")
     object Wallet : BottomNavItem("wallet", Icons.Default.AccountBalanceWallet, "Wallet")
+    object Profile : BottomNavItem("profile", Icons.Default.Person, "Profile")
 }
 
 @Composable
@@ -316,6 +317,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                 var currentUser by remember(userId) { mutableStateOf<User?>(null) }
                 var profile by remember(userId) { mutableStateOf<Profile?>(null) }
                 val userExpenses by database.expenseDao().getExpensesForUser(userId).collectAsState(initial = emptyList())
+                val walletTransactions by database.walletTransactionDao().getTransactionsForUser(userId).collectAsState(initial = emptyList())
                 val walletBalance by database.walletTransactionDao().getUserBalance(userId).collectAsState(initial = 0.0)
 
                 LaunchedEffect(userId) {
@@ -344,6 +346,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                             mainNavController.navigate("profile/${userId}")
                         },
                         localExpenses = userExpenses,
+                        walletTransactions = walletTransactions,
                         walletBalance = walletBalance ?: 0.0
                     )
                 } else {
@@ -376,41 +379,35 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                 val walletTransactions by database.walletTransactionDao()
                     .getTransactionsForUser(userId)
                     .collectAsState(initial = emptyList())
-                val balance by database.walletTransactionDao()
+                val userExpensesForWallet by database.expenseDao()
+                    .getExpensesForUser(userId)
+                    .collectAsState(initial = emptyList())
+                val walletBalance by database.walletTransactionDao()
                     .getUserBalance(userId)
                     .collectAsState(initial = 0.0)
                 
-                // One-time migration: sync existing expenses to wallet transactions
-                LaunchedEffect(Unit) {
-                    val existingExpenses = database.expenseDao().getUserExpenses(userId)
-                    val existingWalletTxs = database.walletTransactionDao().getUserTransactions(userId)
-                    
-                    // Check if there are expenses that aren't in wallet transactions
-                    existingExpenses.forEach { expense ->
-                        val alreadyExists = existingWalletTxs.any { 
-                            it.description == expense.description && 
-                            it.amount == expense.amount && 
-                            it.date == expense.date &&
-                            it.type == "pay"
-                        }
-                        
-                        if (!alreadyExists) {
-                            // Migrate this expense to wallet transaction
-                            val walletTx = WalletTransaction(
-                                userId = userId,
-                                type = "pay",
-                                description = expense.description,
-                                amount = expense.amount,
-                                date = expense.date
-                            )
-                            database.walletTransactionDao().insert(walletTx)
-                        }
+                // Calculate actual balance = wallet balance - expenses
+                val totalExpenses = userExpensesForWallet.sumOf { it.amount }
+                val actualBalance = (walletBalance ?: 0.0) - totalExpenses
+                
+                // Combine wallet transactions and expenses for display
+                val combinedTransactions = remember(walletTransactions, userExpensesForWallet) {
+                    val expenseTransactions = userExpensesForWallet.map { expense ->
+                        WalletTransaction(
+                            id = 0,
+                            userId = userId,
+                            type = "expense",
+                            description = expense.description,
+                            amount = expense.amount,
+                            date = expense.date
+                        )
                     }
+                    (walletTransactions + expenseTransactions).sortedByDescending { it.date }
                 }
                 
                 WalletScreen(
-                    balance = balance ?: 0.0,
-                    transactions = walletTransactions,
+                    balance = actualBalance,
+                    transactions = combinedTransactions,
                     onBackClick = { /* No back button in bottom nav */ },
                     showBackButton = false,
                     onAddMoney = { amount: Double ->
@@ -456,6 +453,46 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                         }
                     }
                 )
+            }
+            
+            composable(BottomNavItem.Profile.route) {
+                var profile by remember { mutableStateOf<Profile?>(null) }
+                
+                LaunchedEffect(userId) {
+                    profile = database.profileDao().findById(userId)
+                }
+                
+                profile?.let { userProfile ->
+                    val user = User(
+                        userId = userProfile.id.toString(),
+                        username = "${userProfile.firstName} ${userProfile.lastName}",
+                        email = userProfile.email,
+                        phone = userProfile.phone
+                    )
+                    
+                    ProfileScreen(
+                        user = user,
+                        onBackClick = { /* No back button in bottom nav */ },
+                        onPersonalInfoClick = {
+                            mainNavController.navigate("personalInfo/${userId}")
+                        },
+                        onBillingAccountClick = {
+                            mainNavController.navigate("billingAccount/${userId}")
+                        },
+                        onLogoutClick = {
+                            mainNavController.navigate("login") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    )
+                } ?: run {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
             }
 
             composable("createGroup") {
@@ -508,7 +545,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     groupId = groupId,
                     onAddExpense = { gId, description, amount, date ->
                         scope.launch {
-                            // Add to Expense table (for groups)
+                            // Add to Expense table only (balance calculated from expenses)
                             val newExpense = Expense(
                                 groupId = gId,
                                 paidBy = userId,
@@ -517,16 +554,6 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                                 date = date
                             )
                             database.expenseDao().insert(newExpense)
-                            
-                            // Also add to WalletTransaction (to update wallet balance)
-                            val walletTransaction = WalletTransaction(
-                                userId = userId,
-                                type = "pay",
-                                description = description,
-                                amount = amount,
-                                date = date
-                            )
-                            database.walletTransactionDao().insert(walletTransaction)
                             
                             Toast.makeText(context, "Expense added", Toast.LENGTH_SHORT).show()
                             navController.popBackStack()
@@ -564,7 +591,8 @@ fun AppBottomNavigation(navController: NavHostController) {
         BottomNavItem.Home,
         BottomNavItem.Expenses,
         BottomNavItem.Groups,
-        BottomNavItem.Wallet
+        BottomNavItem.Wallet,
+        BottomNavItem.Profile
     )
 
     NavigationBar {
