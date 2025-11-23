@@ -35,6 +35,7 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -412,7 +413,7 @@ fun BalanceCard(uiState: UiState, balance: BalanceDto, userName: String) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 56.dp, bottom = 80.dp, start = 24.dp, end = 24.dp)
+                    .padding(top = 46.dp, bottom = 80.dp, start = 24.dp, end = 24.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -440,19 +441,10 @@ fun BalanceCard(uiState: UiState, balance: BalanceDto, userName: String) {
                             fontWeight = FontWeight.SemiBold
                         )
                     }
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White.copy(alpha = 0.06f))
-                            .clickable { /* Handle notification click */ },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.notification),
-                            contentDescription = "Notifications",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
+                    IconButton(onClick = { /* TODO: Notifications */ }) {
+                        Text(
+                            text = "🔔",
+                            fontSize = 24.sp
                         )
                     }
                 }

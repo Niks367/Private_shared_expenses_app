@@ -109,7 +109,7 @@ fun GroupScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 56.dp, start = 24.dp, end = 24.dp),
+                        .padding(top = 26.dp, start = 24.dp, end = 24.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -124,8 +124,12 @@ fun GroupScreen(
                         fontWeight = FontWeight.SemiBold
                     )
 
-                    // Keep this empty space for alignment
-                    Box(modifier = Modifier.size(24.dp))
+                    IconButton(onClick = { /* TODO: Notifications */ }) {
+                        Text(
+                            text = "🔔",
+                            fontSize = 24.sp
+                        )
+                    }
                 }
             }
 
