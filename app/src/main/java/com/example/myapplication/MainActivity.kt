@@ -216,7 +216,17 @@ class MainActivity : ComponentActivity() {
                         route = "billingAccount/{userId}",
                         arguments = listOf(navArgument("userId") { type = NavType.LongType })
                     ) {
+                        val userId = it.arguments?.getLong("userId") ?: return@composable
+                        var currentUser by remember(userId) { mutableStateOf<User?>(null) }
+                        LaunchedEffect(userId) {
+                            val profile = database.profileDao().findById(userId)
+                            if (profile != null) {
+                                currentUser = User(profile.id.toString(), "${profile.firstName} ${profile.lastName}", profile.email, profile.phone)
+                            }
+                        }
+                        
                         BillingAccountScreen(
+                            userName = currentUser?.username ?: "",
                             onBackClick = { navController.popBackStack() },
                             onSaveClick = { _, _, _, _ ->
                                 navController.popBackStack()
