@@ -16,4 +16,11 @@ interface GroupDao {
 
     @Query("SELECT * FROM groups WHERE id = :groupId")
     fun getGroupById(groupId: Long): Flow<Group>
+
+    @Query("""
+        SELECT g.* FROM groups g
+        INNER JOIN group_members gm ON g.id = gm.groupId
+        WHERE gm.profileId = :userId
+    """)
+    fun getAllGroupsForUser(userId: Long): Flow<List<Group>>
 }

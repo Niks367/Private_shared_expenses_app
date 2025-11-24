@@ -18,5 +18,6 @@ data class Expense(
     val description: String,
     val amount: Double,
     val paidBy: Long,
-    val date: String
+    val date: String,
+    val timestamp: Long = System.currentTimeMillis()
 )

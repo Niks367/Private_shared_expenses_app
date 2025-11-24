@@ -14,8 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.entities.Expense
-import com.example.myapplication.entities.Group
-import com.example.myapplication.entities.Profile
 import com.example.myapplication.ui.viewmodels.GroupDetailsViewModel
 
 @Composable

@@ -21,7 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
 
-@Database(entities = [Profile::class, Group::class, GroupMember::class, Expense::class, WalletTransaction::class], version = 7, exportSchema = false)
+@Database(entities = [Profile::class, Group::class, GroupMember::class, Expense::class, WalletTransaction::class], version = 9, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
     abstract fun groupDao(): GroupDao

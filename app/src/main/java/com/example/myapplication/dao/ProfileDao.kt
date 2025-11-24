@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.example.myapplication.entities.Profile
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProfileDao {
@@ -13,8 +14,11 @@ interface ProfileDao {
     @Query("SELECT * FROM profile WHERE id = :id LIMIT 1")
     suspend fun findById(id: Long): Profile?
 
+    @Query("SELECT * FROM profile WHERE id = :id LIMIT 1")
+    fun findByIdFlow(id: Long): Flow<Profile?>
+
     @Insert
-    suspend fun insert(profile: Profile)
+    suspend fun insert(profile: Profile): Long
 
     @Query("SELECT * FROM profile WHERE email = :emailOrPhone OR phone = :emailOrPhone LIMIT 1")
     suspend fun findByEmailOrPhone(emailOrPhone: String): Profile?
