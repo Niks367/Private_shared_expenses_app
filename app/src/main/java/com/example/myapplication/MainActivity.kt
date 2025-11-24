@@ -57,6 +57,7 @@ import com.example.myapplication.ui.AddExpenseScreen
 import com.example.myapplication.ui.BillingAccountScreen
 import com.example.myapplication.ui.CreateGroupScreen
 import com.example.myapplication.ui.ExpensesScreen
+import com.example.myapplication.ui.GroupBalanceScreen
 import com.example.myapplication.ui.GroupDetailsScreen
 import com.example.myapplication.ui.GroupScreen
 import com.example.myapplication.ui.HomeScreen
@@ -626,9 +627,31 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     groupId = groupId, 
                     onAddExpense = {
                         navController.navigate("addExpense/$groupId")
-                    }, 
+                    },
+                    onViewBalance = {
+                        navController.navigate("groupBalance/$groupId")
+                    },
                     viewModel = viewModel
                 )
+            }
+            
+            composable(
+                route = "groupBalance/{groupId}",
+                arguments = listOf(navArgument("groupId") { type = NavType.LongType })
+            ) {
+                val groupId = it.arguments?.getLong("groupId") ?: return@composable
+                val viewModel: GroupDetailsViewModel = viewModel(
+                    factory = GroupDetailsViewModel.Factory(database, groupId)
+                )
+                val uiState by viewModel.uiState.collectAsState()
+                
+                uiState.balanceSummary?.let { balanceSummary ->
+                    GroupBalanceScreen(
+                        groupBalanceSummary = balanceSummary,
+                        currentUserId = userId,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
             }
         }
     }

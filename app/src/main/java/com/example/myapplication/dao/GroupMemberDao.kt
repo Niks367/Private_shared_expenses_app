@@ -19,4 +19,17 @@ interface GroupMemberDao {
         WHERE gm.groupId = :groupId
     """)
     fun getGroupMembers(groupId: Long): Flow<List<Profile>>
+    
+    @Query("""
+        SELECT p.* FROM profile p
+        INNER JOIN group_members gm ON p.id = gm.profileId
+        WHERE gm.groupId = :groupId
+    """)
+    suspend fun getGroupMembersSync(groupId: Long): List<Profile>
+    
+    @Query("""
+        SELECT COUNT(*) FROM group_members
+        WHERE groupId = :groupId
+    """)
+    suspend fun getGroupMemberCount(groupId: Long): Int
 }
