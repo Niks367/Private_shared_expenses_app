@@ -158,7 +158,7 @@ fun MainScreen(userName: String, userId: String) {
 
             }
             composable(BottomNavScreen.CardInfo.route) {
-                BillingAccountScreen()
+                BillingAccountScreen(userName = userName)
             }
             composable(BottomNavScreen.Profile.route) {
                 val ctx = LocalContext.current

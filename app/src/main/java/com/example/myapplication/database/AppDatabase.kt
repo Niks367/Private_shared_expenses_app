@@ -21,7 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
 
-@Database(entities = [Profile::class, Group::class, GroupMember::class, Expense::class, WalletTransaction::class], version = 7, exportSchema = false)
+@Database(entities = [Profile::class, Group::class, GroupMember::class, Expense::class, WalletTransaction::class], version = 8, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
     abstract fun groupDao(): GroupDao
@@ -49,9 +49,25 @@ abstract class AppDatabase : RoomDatabase() {
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
-                            // Pre-populate database with dummy users
+                            populateDummyUsers()
+                        }
+                        
+                        override fun onOpen(db: SupportSQLiteDatabase) {
+                            super.onOpen(db)
+                            // Populate dummy users every time if they don't exist
+                            populateDummyUsers()
+                        }
+                        
+                        private fun populateDummyUsers() {
                             INSTANCE?.let { database ->
                                 CoroutineScope(Dispatchers.IO).launch {
+                                    // Check if users already exist
+                                    val existingUser = database.profileDao().findByEmail("alice@test.com")
+                                    if (existingUser != null) {
+                                        // Users already exist, skip
+                                        return@launch
+                                    }
+                                    
                                     val dummyUsers = listOf(
                                         Profile(
                                             firstName = "Alice",
@@ -73,6 +89,55 @@ abstract class AppDatabase : RoomDatabase() {
                                             email = "test@test.com",
                                             phone = "081234567892",
                                             passwordHash = hashPassword("test123")
+                                        ),
+                                        Profile(
+                                            firstName = "Charlie",
+                                            lastName = "Brown",
+                                            email = "charlie@test.com",
+                                            phone = "081234567893",
+                                            passwordHash = hashPassword("password123")
+                                        ),
+                                        Profile(
+                                            firstName = "Diana",
+                                            lastName = "Prince",
+                                            email = "diana@test.com",
+                                            phone = "081234567894",
+                                            passwordHash = hashPassword("password123")
+                                        ),
+                                        Profile(
+                                            firstName = "Edward",
+                                            lastName = "Norton",
+                                            email = "edward@test.com",
+                                            phone = "081234567895",
+                                            passwordHash = hashPassword("password123")
+                                        ),
+                                        Profile(
+                                            firstName = "Fiona",
+                                            lastName = "Garcia",
+                                            email = "fiona@test.com",
+                                            phone = "081234567896",
+                                            passwordHash = hashPassword("password123")
+                                        ),
+                                        Profile(
+                                            firstName = "George",
+                                            lastName = "Martin",
+                                            email = "george@test.com",
+                                            phone = "081234567897",
+                                            passwordHash = hashPassword("password123")
+                                        ),
+                                        Profile(
+                                            firstName = "Hannah",
+                                            lastName = "Lee",
+                                            email = "hannah@test.com",
+                                            phone = "081234567898",
+                                            passwordHash = hashPassword("password123")
+                                        ),
+                                        Profile(
+                                            firstName = "Ivan",
+                                            lastName = "Rodriguez",
+                                            email = "ivan@test.com",
+                                            phone = "081234567899",
+                                            passwordHash = hashPassword("password123")
                                         )
                                     )
                                     dummyUsers.forEach { profile ->

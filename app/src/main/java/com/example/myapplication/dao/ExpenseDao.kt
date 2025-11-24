@@ -19,4 +19,7 @@ interface ExpenseDao {
     
     @Query("SELECT * FROM expenses WHERE paidBy = :userId ORDER BY date DESC")
     suspend fun getUserExpenses(userId: Long): List<Expense>
+    
+    @Query("SELECT * FROM expenses WHERE groupId = :groupId ORDER BY date DESC")
+    suspend fun getExpensesForGroupSync(groupId: Long): List<Expense>
 }
