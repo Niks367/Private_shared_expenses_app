@@ -6,6 +6,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.example.myapplication.entities.Group
 import com.example.myapplication.entities.Profile
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProfileDao {
@@ -16,6 +17,9 @@ interface ProfileDao {
     suspend fun findById(id: Long): Profile?
     @Query("SELECT groupId FROM group_members WHERE profileId = :profileId")
     suspend fun getGroupIdsForProfile(profileId: Long): List<Long>
+
+    @Query("SELECT * FROM profile WHERE id = :id LIMIT 1")
+    fun findByIdFlow(id: Long): Flow<Profile?>
 
     @Insert
     suspend fun insert(profile: Profile)

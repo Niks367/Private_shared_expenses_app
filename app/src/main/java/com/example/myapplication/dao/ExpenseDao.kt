@@ -13,6 +13,9 @@ interface ExpenseDao {
 
     @Query("SELECT * FROM expenses WHERE groupId = :groupId")
     fun getExpensesForGroup(groupId: Long): Flow<List<Expense>>
+
+    @Query("SELECT * FROM expenses ORDER BY timestamp DESC")
+    fun getAllExpenses(): Flow<List<Expense>>
     
     @Query("SELECT * FROM expenses WHERE paidBy = :userId ORDER BY date DESC")
     fun getExpensesForUser(userId: Long): Flow<List<Expense>>

@@ -54,13 +54,13 @@ abstract class AppDatabase : RoomDatabase() {
                             super.onCreate(db)
                             populateDummyUsers()
                         }
-                        
+
                         override fun onOpen(db: SupportSQLiteDatabase) {
                             super.onOpen(db)
                             // Populate dummy users every time if they don't exist
                             populateDummyUsers()
                         }
-                        
+
                         private fun populateDummyUsers() {
                             INSTANCE?.let { database ->
                                 CoroutineScope(Dispatchers.IO).launch {
@@ -70,7 +70,7 @@ abstract class AppDatabase : RoomDatabase() {
                                         // Users already exist, skip
                                         return@launch
                                     }
-                                    
+
                                     val dummyUsers = listOf(
                                         Profile(
                                             firstName = "Alice",

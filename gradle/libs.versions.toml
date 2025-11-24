@@ -28,6 +28,7 @@ foundation = "1.9.4"
 adsMobileSdk = "0.21.0-beta01"
 runtime = "1.9.5"
 materialIcons = "1.6.8"
+uiVersion = "1.9.5"
 
 [libraries]
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -70,6 +71,7 @@ ads-mobile-sdk = { group = "com.google.android.libraries.ads.mobile.sdk", name =
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 androidx-compose-material-icons = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIcons" }
+ui = { group = "androidx.compose.ui", name = "ui", version.ref = "uiVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     kotlin("kapt")
+    kotlin("plugin.serialization") version "1.9.22"
 }
 
 android {
@@ -70,6 +71,7 @@ dependencies {
     implementation(libs.ads.mobile.sdk)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.material3)
+    implementation(libs.ui)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // ---------- NAVIGATION ----------
@@ -82,6 +84,7 @@ dependencies {
     // ---------- OTHER GOOGLE / SUPPORT ----------
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
     
     // ---------- MATERIAL ICONS (from expensesAndGroups) ----------
     implementation("androidx.compose.material:material-icons-extended-android:1.6.8")
@@ -100,5 +103,12 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.google.code.gson:gson:2.10.1")
     kapt("androidx.room:room-compiler:2.8.4")
+
+    // Ktor for WebSocket client
+    implementation("io.ktor:ktor-client-core:2.3.6")
+    implementation("io.ktor:ktor-client-okhttp:2.3.6")
+    implementation("io.ktor:ktor-client-websockets:2.3.6")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
 
 }
