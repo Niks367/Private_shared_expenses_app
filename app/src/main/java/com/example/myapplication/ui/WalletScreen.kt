@@ -86,7 +86,7 @@ fun WalletScreen(
                     
                     drawPath(
                         path = path,
-                        color = Color(0xFF4A9B8E),
+                        color = PrimaryTeal,
                         style = Fill
                     )
                 }
