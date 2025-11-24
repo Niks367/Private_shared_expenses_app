@@ -38,7 +38,8 @@ fun WalletScreen(
     onAddMoney: (Double) -> Unit,
     onPay: (String, Double) -> Unit,
     onSend: (String, Double) -> Unit,
-    showBackButton: Boolean = true
+    showBackButton: Boolean = true,
+    onTransactionClick: (WalletTransaction) -> Unit = {}
 ) {
     var showAddMoneyDialog by remember { mutableStateOf(false) }
     var showPayDialog by remember { mutableStateOf(false) }
@@ -242,7 +243,10 @@ fun WalletScreen(
                 }
             } else {
                 transactions.forEach { transaction ->
-                    WalletTransactionItem(transaction = transaction)
+                    WalletTransactionItem(
+                        transaction = transaction,
+                        onClick = { onTransactionClick(transaction) }
+                    )
                 }
             }
 
@@ -320,11 +324,15 @@ fun WalletActionButton(
 }
 
 @Composable
-fun WalletTransactionItem(transaction: WalletTransaction) {
+fun WalletTransactionItem(
+    transaction: WalletTransaction,
+    onClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 6.dp),
+            .padding(horizontal = 20.dp, vertical = 6.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(2.dp)

@@ -88,7 +88,8 @@ fun HomeScreen(
     walletBalance: Double = 0.0,
     viewModel: HomeViewModel = viewModel(
         factory = HomeViewModelFactory(ServiceLocator.userRepository)
-    )
+    ),
+    onTransactionClick: (WalletTransaction) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -141,7 +142,8 @@ fun HomeScreen(
                     walletTransactions = walletTransactions,
                     localExpenses = localExpenses,
                     uiState = uiState,
-                    isNewUser = isNewUser
+                    isNewUser = isNewUser,
+                    onTransactionClick = onTransactionClick
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 SendAgainSection()
@@ -154,17 +156,19 @@ fun HomeScreen(
             userId = userId,
             onDismiss = { showTransferDialog = false },
             onTransferSent = { recipient, amount ->
-                coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                    val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                    val transaction = WalletTransaction(
-                        0,
-                        userId.toLong(),
-                        "send",
-                        "Send to $recipient",
-                        amount,
-                        dateFormat.format(java.util.Date())
-                    )
-                    database.walletTransactionDao().insert(transaction)
+                coroutineScope.launch {
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                        val transaction = WalletTransaction(
+                            0,
+                            userId.toLong(),
+                            "send",
+                            "Send to $recipient",
+                            amount,
+                            dateFormat.format(java.util.Date())
+                        )
+                        database.walletTransactionDao().insert(transaction)
+                    }
 
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                         Toast.makeText(
@@ -283,11 +287,14 @@ fun AddTransactionFab(
 }
 
 @Composable
-fun TransactionItem(transaction: Transaction) {
+fun TransactionItem(
+    transaction: Transaction,
+    onClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Handle transaction click */ },
+            .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -596,7 +603,8 @@ fun TransactionHistorySection(
     walletTransactions: List<WalletTransaction>,
     localExpenses: List<Expense>,
     uiState: UiState,
-    isNewUser: Boolean
+    isNewUser: Boolean,
+    onTransactionClick: (WalletTransaction) -> Unit = {}
 ) {
     val localTransactions = remember(localExpenses, walletTransactions) {
         val expenseList = localExpenses.map { expense ->
@@ -611,7 +619,8 @@ fun TransactionHistorySection(
                 title = expense.description,
                 date = readableDate,
                 amount = expense.amount,
-                isIncome = false
+                isIncome = false,
+                expense = expense
             )
         }
 
@@ -629,7 +638,8 @@ fun TransactionHistorySection(
                 title = wallet.description,
                 date = readableDate,
                 amount = wallet.amount,
-                isIncome = isIncome
+                isIncome = isIncome,
+                walletTransaction = wallet
             )
         }
         (expenseList + walletList).sortedByDescending { it.date }
@@ -664,7 +674,26 @@ fun TransactionHistorySection(
         Spacer(modifier = Modifier.height(16.dp))
 
         displayedTransactions.take(4).forEach { transaction ->
-            TransactionItem(transaction = transaction)
+            TransactionItem(
+                transaction = transaction,
+                onClick = {
+                    // Handle wallet transaction click
+                    transaction.walletTransaction?.let { onTransactionClick(it) }
+                    
+                    // Handle expense click - convert to WalletTransaction for navigation
+                    transaction.expense?.let { expense ->
+                        val tempWalletTransaction = WalletTransaction(
+                            id = expense.id,
+                            userId = expense.paidBy,
+                            type = "expense",
+                            description = expense.description,
+                            amount = expense.amount,
+                            date = expense.date
+                        )
+                        onTransactionClick(tempWalletTransaction)
+                    }
+                }
+            )
             Spacer(modifier = Modifier.height(12.dp))
         }
         if (displayedTransactions.isEmpty()) {

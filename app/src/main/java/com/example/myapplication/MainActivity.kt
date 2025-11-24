@@ -65,6 +65,7 @@ import com.example.myapplication.ui.LoginScreen
 import com.example.myapplication.ui.PersonalInformationScreen
 import com.example.myapplication.ui.ProfileScreen
 import com.example.myapplication.ui.SignupScreen
+import com.example.myapplication.ui.TransactionDetailsScreen
 import com.example.myapplication.ui.WalletScreen
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.ui.viewmodels.GroupDetailsViewModel
@@ -291,7 +292,38 @@ class MainActivity : ComponentActivity() {
                                     database.walletTransactionDao().insert(transaction)
                                     Toast.makeText(ctx, "Money sent successfully!", Toast.LENGTH_SHORT).show()
                                 }
+                            },
+                            onTransactionClick = { transaction ->
+                                navController.navigate(
+                                    "transactionDetails/${transaction.id}/${transaction.type}/${transaction.description}/${transaction.amount}/${transaction.date}"
+                                )
                             }
+                        )
+                    }
+                    
+                    composable(
+                        route = "transactionDetails/{transactionId}/{transactionType}/{description}/{amount}/{date}",
+                        arguments = listOf(
+                            navArgument("transactionId") { type = NavType.StringType },
+                            navArgument("transactionType") { type = NavType.StringType },
+                            navArgument("description") { type = NavType.StringType },
+                            navArgument("amount") { type = NavType.StringType },
+                            navArgument("date") { type = NavType.StringType }
+                        )
+                    ) {
+                        val transactionId = it.arguments?.getString("transactionId") ?: ""
+                        val transactionType = it.arguments?.getString("transactionType") ?: ""
+                        val description = it.arguments?.getString("description") ?: ""
+                        val amount = it.arguments?.getString("amount")?.toDoubleOrNull() ?: 0.0
+                        val date = it.arguments?.getString("date") ?: ""
+                        
+                        TransactionDetailsScreen(
+                            transactionId = transactionId,
+                            transactionType = transactionType,
+                            description = description,
+                            amount = amount,
+                            date = date,
+                            onBackClick = { navController.popBackStack() }
                         )
                     }
                 }
@@ -354,7 +386,12 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                         userId = user.userId,
                         localExpenses = userExpenses,
                         walletTransactions = walletTransactions,
-                        walletBalance = walletBalance ?: 0.0
+                        walletBalance = walletBalance ?: 0.0,
+                        onTransactionClick = { transaction ->
+                            mainNavController.navigate(
+                                "transactionDetails/${transaction.id}/${transaction.type}/${transaction.description}/${transaction.amount}/${transaction.date}"
+                            )
+                        }
                     )
                 } else {
                     Box(
@@ -458,6 +495,11 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                             database.walletTransactionDao().insert(transaction)
                             Toast.makeText(context, "Money sent successfully!", Toast.LENGTH_SHORT).show()
                         }
+                    },
+                    onTransactionClick = { transaction ->
+                        mainNavController.navigate(
+                            "transactionDetails/${transaction.id}/${transaction.type}/${transaction.description}/${transaction.amount}/${transaction.date}"
+                        )
                     }
                 )
             }
