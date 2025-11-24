@@ -1,5 +1,9 @@
 package com.example.myapplication
 
+import ads_mobile_sdk.ex
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.util.Base64
@@ -82,8 +86,23 @@ class MainActivity : ComponentActivity() {
         return Base64.encodeToString(bytes, Base64.NO_WRAP)
     }
 
+    private fun createNotificationChannel(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Expense Notifications"
+            val descriptionText = "Notifications for new expenses"
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel("expenses", name, importance).apply {
+                description = descriptionText
+            }
+            val notificationManager: NotificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     override fun onCreate(savedInstanceState: Bundle?) {
+        createNotificationChannel(this)
         super.onCreate(savedInstanceState)
 
         setContent {
@@ -165,7 +184,9 @@ class MainActivity : ComponentActivity() {
                             onLoginSuccess = { email, password ->
                                 lifecycleScope.launch {
                                     val profile = database.profileDao().findByEmail(email)
-                                    if (profile != null && hashPassword(password) == profile.passwordHash) {
+                                    if (profile != null && hashPassword(password) == profile.passwordHash)
+                                    {
+                                        WebSocketManager.start(ctx.applicationContext)
                                         navController.navigate("main/${profile.id}") {
                                             popUpTo(navController.graph.startDestinationId) {
                                                 inclusive = true
@@ -499,9 +520,8 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                 val groups by database.groupDao().getAllGroups()
                     .collectAsState(initial = emptyList())
 
-                GroupScreen(navController = navController, groups = groups) { group ->
-                    navController.navigate("groupDetails/${group.id}")
-                }
+                GroupScreen(navController = navController, groups = groups, onGroupClick = {group ->
+                    navController.navigate("groupDetails/${group.id}")}, expenseDao = database.expenseDao())
             }
 
             composable(BottomNavItem.Wallet.route) {
@@ -695,7 +715,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                 arguments = listOf(navArgument("groupId") { type = NavType.LongType })
             ) { backStackEntry ->
                 val groupId = backStackEntry.arguments?.getLong("groupId") ?: return@composable
-
+                val ctx = LocalContext.current
                 AddExpenseScreen(
                     groupId = groupId,
                     onAddExpense = { gId, description, amount, date ->
@@ -709,7 +729,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                                 date = date
                             )
                             database.expenseDao().insert(newExpense)
-
+                            WebSocketManager.start(ctx.applicationContext)
                             Toast.makeText(context, "Expense added", Toast.LENGTH_SHORT).show()
                             navController.popBackStack()
                         }

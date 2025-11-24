@@ -10,6 +10,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +27,7 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.myapplication.dao.ExpenseDao
 import com.example.myapplication.entities.Group
 import com.example.myapplication.ui.theme.PrimaryTeal
 import com.example.myapplication.ui.theme.White
@@ -29,8 +36,19 @@ import com.example.myapplication.ui.theme.White
 fun GroupScreen(
     navController: NavController,
     groups: List<Group>,
-    onGroupClick: (Group) -> Unit
+    onGroupClick: (Group) -> Unit,
+    expenseDao: ExpenseDao
 ) {
+    val expenses by expenseDao.getAllExpenses().collectAsState(initial = emptyList())
+    val snackbarHostState = remember { SnackbarHostState() }
+    var lastShownTimestamp by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(expenses) {
+        val newExpense = expenses.firstOrNull { it.timestamp > lastShownTimestamp }
+        if (newExpense != null) {
+            snackbarHostState.showSnackbar("New expense added!")
+            lastShownTimestamp = newExpense.timestamp
+        }
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
