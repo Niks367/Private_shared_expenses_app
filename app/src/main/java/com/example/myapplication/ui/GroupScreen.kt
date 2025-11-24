@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,7 +21,6 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.entities.Group
 import com.example.myapplication.ui.theme.PrimaryTeal
 import com.example.myapplication.ui.theme.White
@@ -113,10 +111,8 @@ fun GroupScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Text("←", color = White, fontSize = 28.sp)
-                    }
-
+                    Spacer(modifier = Modifier.width(48.dp))
+                    
                     Text(
                         text = "Groups",
                         color = White,
@@ -133,7 +129,7 @@ fun GroupScreen(
                 }
             }
 
-            // BODY CONTENT (overlapping)
+            // BODY CONTENT
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -141,9 +137,10 @@ fun GroupScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // Avatar circle with emoji
+                // ICON (moved further up into header)
                 Box(
                     modifier = Modifier
+                        .offset(y = (-35).dp)
                         .size(120.dp)
                         .clip(CircleShape)
                         .background(White),
@@ -152,7 +149,7 @@ fun GroupScreen(
                     Text(text = "👥", fontSize = 48.sp)
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp)) // ⬅️ was 10.dp
 
                 Text(
                     text = "Your Groups",
@@ -162,7 +159,7 @@ fun GroupScreen(
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                // Create Group Button (same color as profile header)
+                // Create Group Button
                 Button(
                     onClick = { navController.navigate("createGroup") },
                     modifier = Modifier
@@ -225,14 +222,4 @@ fun GroupListItem(group: Group, onClick: () -> Unit) {
             Text(group.description, fontSize = 14.sp, color = Color.Gray)
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GroupScreenPreview() {
-    val sampleGroups = listOf(
-        Group(1, "School Group", "Friends from school"),
-        Group(2, "Work Team", "Colleagues from office")
-    )
-    GroupScreen(rememberNavController(), sampleGroups, {})
 }

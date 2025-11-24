@@ -623,6 +623,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                 val viewModel: GroupDetailsViewModel = viewModel(
                     factory = GroupDetailsViewModel.Factory(database, groupId)
                 )
+
                 GroupDetailsScreen(
                     groupId = groupId, 
                     onAddExpense = {
