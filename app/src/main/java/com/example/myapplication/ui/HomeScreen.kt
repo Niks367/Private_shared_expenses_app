@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.room.withTransaction
 import com.example.myapplication.R
 import com.example.myapplication.database.AppDatabase
 import com.example.myapplication.di.ServiceLocator
@@ -67,10 +68,13 @@ import com.example.myapplication.entities.Expense
 import com.example.myapplication.entities.WalletTransaction
 import com.example.myapplication.model.BalanceDto
 import com.example.myapplication.model.Transaction
+import com.example.myapplication.model.User
 import com.example.myapplication.ui.viewmodels.HomeViewModel
 import com.example.myapplication.ui.viewmodels.HomeViewModelFactory
 import com.example.myapplication.ui.viewmodels.UiState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
@@ -162,12 +166,63 @@ fun HomeScreen(
                         date = dateFormat.format(java.util.Date())
                     )
                     database.walletTransactionDao().insert(transaction)
-
                     Toast.makeText(
                         context,
                         "Money sent successfully!",
                         Toast.LENGTH_SHORT
                     ).show()
+                }
+                coroutineScope.launch {
+                    val dateFormat = java.text.SimpleDateFormat(
+                            "yyyy-MM-dd",
+                    java.util.Locale.getDefault()
+                    )
+                    val fetchedProfile = database.profileDao().findByFullName(recipient.trim())
+                    if (fetchedProfile == null) {
+                        Toast.makeText(
+                            context,
+                            "⚠️ No user found with that name. Please check the spelling.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return@launch
+                    }
+
+                    val recipient = User(
+                        userId = fetchedProfile.id.toString(),
+                        username = "${fetchedProfile.firstName} ${fetchedProfile.lastName}",
+                        email = fetchedProfile.email,
+                        phone = fetchedProfile.phone
+                    )
+                    val userGroupIds = database.profileDao().getGroupIdsForProfile(userId.toLong())
+                    val recipientGroupIds = database.profileDao().getGroupIdsForProfile(fetchedProfile.id)
+                    if (recipientGroupIds == null) {
+                        Toast.makeText(
+                            context,
+                            "⚠️ No user found with name \"$recipient\".",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return@launch
+                    }
+                    val senderExpense = Expense(
+                        groupId = userGroupIds.first(),
+                        description = "Sent to ${recipient.username}",
+                        amount = -amount,
+                        paidBy = userId.toLong(),
+                        date = dateFormat.format(java.util.Date())
+                    )
+                    val receiverExpense = Expense(
+                        groupId = recipientGroupIds.first(),
+                        description = "Received from ${userId}",
+                        amount = amount,
+                        paidBy = userId.toLong(),
+                        date = dateFormat.format(java.util.Date())
+                    )
+                    withContext(Dispatchers.IO) {
+                        database.withTransaction {
+                            database.expenseDao().insert(senderExpense)
+                            database.expenseDao().insert(receiverExpense)
+                        }
+                    }
                 }
                 showTransferDialog = false
             }

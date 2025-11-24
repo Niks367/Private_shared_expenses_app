@@ -21,7 +21,6 @@ data class Profile(
 interface ProfileDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(profile: Profile)
-
     @Query("SELECT * FROM profile WHERE id = :id")
     suspend fun getById(id: Long): Profile?
 }

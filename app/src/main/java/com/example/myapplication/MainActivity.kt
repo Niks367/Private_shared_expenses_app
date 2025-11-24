@@ -298,6 +298,7 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val title: 
     object Profile : BottomNavItem("profile", Icons.Default.Person, "Profile")
 }
 
+@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Composable
 fun MainScreen(mainNavController: NavHostController, userId: Long) {
     val navController = rememberNavController()
