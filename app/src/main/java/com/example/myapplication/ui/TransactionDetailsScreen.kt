@@ -30,8 +30,7 @@ fun TransactionDetailsScreen(
     onBackClick: () -> Unit = {}
 ) {
     val isIncome = transactionType == "income" || transactionType == "add"
-    val fee = 20.0 // Example fee
-    val total = if (isIncome) amount - fee else amount + 0.99
+    val total = amount // No fee
     
     Box(
         modifier = Modifier
@@ -242,49 +241,6 @@ fun TransactionDetailsScreen(
                             label = "Date",
                             value = date
                         )
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        HorizontalDivider(color = Color(0xFFE2E8F0))
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        // Breakdown
-                        DetailRow(
-                            label = if (isIncome) "Earnings" else "Spending",
-                            value = formatCurrency(amount)
-                        )
-                        
-                        DetailRow(
-                            label = "Fee",
-                            value = if (isIncome) "- ${formatCurrency(fee)}" else "- ${formatCurrency(0.99)}"
-                        )
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        HorizontalDivider(color = Color(0xFFE2E8F0))
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        // Total
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Total",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF2D3748)
-                            )
-                            Text(
-                                text = formatCurrency(total),
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF2D3748)
-                            )
-                        }
                     }
                 }
             }
