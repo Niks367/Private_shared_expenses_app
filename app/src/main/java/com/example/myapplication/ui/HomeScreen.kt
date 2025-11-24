@@ -1,6 +1,7 @@
 package com.example.myapplication.ui
 
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresExtension
 import androidx.compose.foundation.Image
@@ -174,8 +175,8 @@ fun HomeScreen(
                 }
                 coroutineScope.launch {
                     val dateFormat = java.text.SimpleDateFormat(
-                            "yyyy-MM-dd",
-                    java.util.Locale.getDefault()
+                        "yyyy-MM-dd",
+                        java.util.Locale.getDefault()
                     )
                     val fetchedProfile = database.profileDao().findByFullName(recipient.trim())
                     if (fetchedProfile == null) {
@@ -194,33 +195,42 @@ fun HomeScreen(
                         phone = fetchedProfile.phone
                     )
                     val userGroupIds = database.profileDao().getGroupIdsForProfile(userId.toLong())
-                    val recipientGroupIds = database.profileDao().getGroupIdsForProfile(fetchedProfile.id)
-                    if (recipientGroupIds == null) {
+                    val recipientGroupIds =
+                        database.profileDao().getGroupIdsForProfile(fetchedProfile.id)
+                    val senderGroupId = userGroupIds.firstOrNull() ?: run {
                         Toast.makeText(
                             context,
-                            "⚠️ No user found with name \"$recipient\".",
+                            "⚠️ You aren’t a member of any group. Join or create one first.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return@launch
+                    }
+                    val receiverGroupId = recipientGroupIds.firstOrNull() ?: run {
+                        Toast.makeText(
+                            context,
+                            "⚠️ The recipient isn’t in any group yet.",
                             Toast.LENGTH_LONG
                         ).show()
                         return@launch
                     }
                     val senderExpense = Expense(
-                        groupId = userGroupIds.first(),
+                        groupId = senderGroupId,
                         description = "Sent to ${recipient.username}",
-                        amount = -amount,
+                        amount = amount,
                         paidBy = userId.toLong(),
                         date = dateFormat.format(java.util.Date())
                     )
-                    val receiverExpense = Expense(
-                        groupId = recipientGroupIds.first(),
-                        description = "Received from ${userId}",
+                    val receiverExpense = WalletTransaction(
+                        userId = recipient.userId.toLong(),
+                        type = "add",
+                        description = "Received money from $userName ",
                         amount = amount,
-                        paidBy = userId.toLong(),
                         date = dateFormat.format(java.util.Date())
                     )
                     withContext(Dispatchers.IO) {
                         database.withTransaction {
                             database.expenseDao().insert(senderExpense)
-                            database.expenseDao().insert(receiverExpense)
+                            database.walletTransactionDao().insert(receiverExpense)
                         }
                     }
                 }
@@ -229,6 +239,7 @@ fun HomeScreen(
         )
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransferDialog(
@@ -313,6 +324,7 @@ fun TransferDialog(
         }
     )
 }
+
 @Composable
 fun AddTransactionFab(
     onClick: () -> Unit,
