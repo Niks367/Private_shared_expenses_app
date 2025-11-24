@@ -95,75 +95,11 @@ fun OnboardingScreen(
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                // Left coin icon (Dollar symbol)
-                Box(
-                    modifier = Modifier
-                        .size(95.dp)
-                        .offset(x = (-80).dp, y = (-40).dp)
-                        .align(Alignment.TopStart)
-                ) {
-                    // Outer ring
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                            .background(Color(0xFF5BA89E).copy(alpha = 0.3f))
-                    )
-                    // Inner blue circle
-                    Box(
-                        modifier = Modifier
-                            .size(75.dp)
-                            .align(Alignment.Center)
-                            .clip(CircleShape)
-                            .background(Color(0xFF4A9FE8))
-                    )
-                    // Dollar text
-                    Text(
-                        text = "$",
-                        fontSize = 40.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-
-                // Right donut icon (Pie chart style)
-                Box(
-                    modifier = Modifier
-                        .size(88.dp)
-                        .offset(x = 100.dp, y = 20.dp)
-                        .align(Alignment.TopEnd)
-                ) {
-                    // Outer ring
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                            .background(Color(0xFF5BA89E).copy(alpha = 0.3f))
-                    )
-                    // Inner gradient circle (simulating pie chart)
-                    Box(
-                        modifier = Modifier
-                            .size(68.dp)
-                            .align(Alignment.Center)
-                            .clip(CircleShape)
-                            .background(
-                                brush = Brush.sweepGradient(
-                                    colors = listOf(
-                                        Color(0xFFFF6B9D),
-                                        Color(0xFF4A9FE8),
-                                        Color(0xFFFF8C42),
-                                        Color(0xFFC86DD7)
-                                    )
-                                )
-                            )
-                    )
-                }
-
+            
                 // Center illustration - 3D character
                 Box(
                     modifier = Modifier
-                        .size(350.dp, 500.dp)
+                        .size(450.dp, 550.dp)
                         .align(Alignment.Center),
                     contentAlignment = Alignment.Center
                 ) {
