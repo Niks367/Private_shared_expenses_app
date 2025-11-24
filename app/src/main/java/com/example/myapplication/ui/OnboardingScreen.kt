@@ -160,8 +160,7 @@ fun OnboardingScreen(
                     )
                 }
 
-                // Center illustration placeholder (3D character)
-                // Since we can't import the exact 3D illustration, we'll use a placeholder
+                // Center illustration - 3D character
                 Box(
                     modifier = Modifier
                         .size(280.dp, 460.dp)
@@ -177,21 +176,14 @@ fun OnboardingScreen(
                             .background(Color.Black.copy(alpha = 0.1f))
                     )
                     
-                    // Placeholder for 3D character
-                    // You can replace this with an actual image resource
-                    Box(
+                    // 3D character image
+                    Image(
+                        painter = painterResource(id = R.drawable.onboarding),
+                        contentDescription = "Onboarding character",
                         modifier = Modifier
-                            .size(200.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF2E7E78).copy(alpha = 0.1f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "👤",
-                            fontSize = 100.sp,
-                            modifier = Modifier.offset(y = (-10).dp)
-                        )
-                    }
+                            .size(280.dp, 400.dp)
+                            .offset(y = (-20).dp)
+                    )
                 }
             }
 
