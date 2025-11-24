@@ -163,26 +163,16 @@ fun OnboardingScreen(
                 // Center illustration - 3D character
                 Box(
                     modifier = Modifier
-                        .size(280.dp, 460.dp)
+                        .size(350.dp, 500.dp)
                         .align(Alignment.Center),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Shadow
-                    Box(
-                        modifier = Modifier
-                            .size(300.dp, 40.dp)
-                            .offset(y = 200.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(Color.Black.copy(alpha = 0.1f))
-                    )
-                    
-                    // 3D character image
+                    // 3D character image (larger size, no shadow)
                     Image(
                         painter = painterResource(id = R.drawable.onboarding),
                         contentDescription = "Onboarding character",
                         modifier = Modifier
-                            .size(280.dp, 400.dp)
-                            .offset(y = (-20).dp)
+                            .size(350.dp, 500.dp)
                     )
                 }
             }
