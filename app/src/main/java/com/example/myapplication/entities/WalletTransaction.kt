@@ -19,7 +19,7 @@ data class WalletTransaction(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val userId: Long,
-    val type: String, // "add", "pay", "send", "income"
+    val type: String,
     val description: String,
     val amount: Double,
     val date: String
