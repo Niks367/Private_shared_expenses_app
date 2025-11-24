@@ -631,6 +631,9 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     onViewBalance = {
                         navController.navigate("groupBalance/$groupId")
                     },
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
                     viewModel = viewModel
                 )
             }
