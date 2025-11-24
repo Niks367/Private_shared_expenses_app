@@ -1,5 +1,6 @@
 package com.example.myapplication.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,7 +14,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -34,15 +38,43 @@ fun GroupScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // HEADER
+            // HEADER with curved bottom
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(287.dp)
-                    .background(PrimaryTeal)
+                    .height(240.dp)
             ) {
+                // Curved background using Canvas
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(240.dp)
+                ) {
+                    val width = size.width
+                    val height = size.height
+                    
+                    val path = Path().apply {
+                        moveTo(0f, 0f)
+                        lineTo(0f, height - 60f)
+                        
+                        // Curve di bagian bawah
+                        quadraticBezierTo(
+                            width / 2f, height + 20f,  // Control point
+                            width, height - 60f         // End point
+                        )
+                        
+                        lineTo(width, 0f)
+                        close()
+                    }
+                    
+                    drawPath(
+                        path = path,
+                        color = PrimaryTeal,
+                        style = Fill
+                    )
+                }
 
-                // Decorative circles
+                // Decorative circles in background
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -71,28 +103,29 @@ fun GroupScreen(
                     )
                 }
 
-                // TOP BAR with centered title
-                Box(
+                // Top bar
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 56.dp),
-                    contentAlignment = Alignment.Center
+                        .padding(top = 26.dp, start = 24.dp, end = 24.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Spacer(modifier = Modifier.width(48.dp))
+                    
                     Text(
                         text = "Groups",
                         color = White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold
                     )
-                }
 
-                IconButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier
-                        .padding(top = 56.dp, start = 24.dp)
-                        .align(Alignment.TopStart)
-                ) {
-                    Text("←", color = White, fontSize = 28.sp)
+                    IconButton(onClick = { /* TODO: Notifications */ }) {
+                        Text(
+                            text = "🔔",
+                            fontSize = 24.sp
+                        )
+                    }
                 }
             }
 
@@ -100,7 +133,7 @@ fun GroupScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset(y = (-130).dp),
+                    .offset(y = (-80).dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
