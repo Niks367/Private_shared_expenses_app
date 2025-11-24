@@ -67,6 +67,7 @@ import com.example.myapplication.ui.OnboardingScreen
 import com.example.myapplication.ui.PersonalInformationScreen
 import com.example.myapplication.ui.ProfileScreen
 import com.example.myapplication.ui.SignupScreen
+import com.example.myapplication.ui.StatisticsScreen
 import com.example.myapplication.ui.TransactionDetailsScreen
 import com.example.myapplication.ui.WalletScreen
 import com.example.myapplication.ui.theme.MyApplicationTheme
@@ -102,17 +103,30 @@ class MainActivity : ComponentActivity() {
                             onLoginClick = { navController.navigate("login") }
                         )
                     }
-                    
+                    composable("statistics") {
+                        StatisticsScreen()
+                    }
                     composable("signup") {
                         SignupScreen(
                             onSignupClick = { firstName, lastName, email, phone, password ->
                                 lifecycleScope.launch {
                                     when {
-                                        firstName.isBlank() -> signupError = "Please enter a first name"
-                                        lastName.isBlank() -> signupError = "Please enter a last name"
-                                        !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> signupError = "Invalid email address"
-                                        password.length < 6 -> signupError = "Password must be at least 6 characters"
-                                        database.profileDao().findByEmail(email) != null -> signupError = "Email is already registered"
+                                        firstName.isBlank() -> signupError =
+                                            "Please enter a first name"
+
+                                        lastName.isBlank() -> signupError =
+                                            "Please enter a last name"
+
+                                        !Patterns.EMAIL_ADDRESS.matcher(email)
+                                            .matches() -> signupError = "Invalid email address"
+
+                                        password.length < 6 -> signupError =
+                                            "Password must be at least 6 characters"
+
+                                        database.profileDao()
+                                            .findByEmail(email) != null -> signupError =
+                                            "Email is already registered"
+
                                         else -> {
                                             signupError = null
                                             val profile = Profile(
@@ -123,12 +137,19 @@ class MainActivity : ComponentActivity() {
                                                 passwordHash = hashPassword(password)
                                             )
                                             database.profileDao().insert(profile)
-                                            val savedProfile = database.profileDao().findByEmail(email)!!
+                                            val savedProfile =
+                                                database.profileDao().findByEmail(email)!!
 
                                             navController.navigate("main/${savedProfile.id}") {
-                                                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                                                popUpTo(navController.graph.startDestinationId) {
+                                                    inclusive = true
+                                                }
                                             }
-                                            Toast.makeText(ctx, "Welcome, ${savedProfile.firstName}!", Toast.LENGTH_LONG).show()
+                                            Toast.makeText(
+                                                ctx,
+                                                "Welcome, ${savedProfile.firstName}!",
+                                                Toast.LENGTH_LONG
+                                            ).show()
                                         }
                                     }
                                 }
@@ -138,7 +159,7 @@ class MainActivity : ComponentActivity() {
                             errorMessage = signupError
                         )
                     }
-                    
+
                     composable("login") {
                         LoginScreen(
                             onLoginSuccess = { email, password ->
@@ -146,11 +167,18 @@ class MainActivity : ComponentActivity() {
                                     val profile = database.profileDao().findByEmail(email)
                                     if (profile != null && hashPassword(password) == profile.passwordHash) {
                                         navController.navigate("main/${profile.id}") {
-                                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                inclusive = true
+                                            }
                                         }
-                                        Toast.makeText(ctx, "Login successful!", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(ctx, "Login successful!", Toast.LENGTH_LONG)
+                                            .show()
                                     } else {
-                                        Toast.makeText(ctx, "Incorrect password or user not found.", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(
+                                            ctx,
+                                            "Incorrect password or user not found.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
                                     }
                                 }
                             },
@@ -158,7 +186,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxSize()
                         )
                     }
-                    
+
                     composable(
                         route = "main/{userId}",
                         arguments = listOf(navArgument("userId") { type = NavType.LongType })
@@ -170,7 +198,7 @@ class MainActivity : ComponentActivity() {
                         }
                         MainScreen(mainNavController = navController, userId = userId)
                     }
-                    
+
                     composable(
                         route = "profile/{userId}",
                         arguments = listOf(navArgument("userId") { type = NavType.LongType })
@@ -180,7 +208,12 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(userId) {
                             val profile = database.profileDao().findById(userId)
                             if (profile != null) {
-                                currentUser = User(profile.id.toString(), "${profile.firstName} ${profile.lastName}", profile.email, profile.phone)
+                                currentUser = User(
+                                    profile.id.toString(),
+                                    "${profile.firstName} ${profile.lastName}",
+                                    profile.email,
+                                    profile.phone
+                                )
                             }
                         }
 
@@ -192,13 +225,15 @@ class MainActivity : ComponentActivity() {
                                 onBillingAccountClick = { navController.navigate("billingAccount/${user.userId}") },
                                 onLogoutClick = {
                                     navController.navigate("login") {
-                                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                                        popUpTo(navController.graph.startDestinationId) {
+                                            inclusive = true
+                                        }
                                     }
                                 }
                             )
                         }
                     }
-                    
+
                     composable(
                         route = "personalInfo/{userId}",
                         arguments = listOf(navArgument("userId") { type = NavType.LongType })
@@ -208,7 +243,12 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(userId) {
                             val profile = database.profileDao().findById(userId)
                             if (profile != null) {
-                                currentUser = User(profile.id.toString(), "${profile.firstName} ${profile.lastName}", profile.email, profile.phone)
+                                currentUser = User(
+                                    profile.id.toString(),
+                                    "${profile.firstName} ${profile.lastName}",
+                                    profile.email,
+                                    profile.phone
+                                )
                             }
                         }
                         currentUser?.let { user ->
@@ -221,7 +261,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
-                    
+
                     composable(
                         route = "billingAccount/{userId}",
                         arguments = listOf(navArgument("userId") { type = NavType.LongType })
@@ -231,10 +271,15 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(userId) {
                             val profile = database.profileDao().findById(userId)
                             if (profile != null) {
-                                currentUser = User(profile.id.toString(), "${profile.firstName} ${profile.lastName}", profile.email, profile.phone)
+                                currentUser = User(
+                                    profile.id.toString(),
+                                    "${profile.firstName} ${profile.lastName}",
+                                    profile.email,
+                                    profile.phone
+                                )
                             }
                         }
-                        
+
                         BillingAccountScreen(
                             userName = currentUser?.username ?: "",
                             onBackClick = { navController.popBackStack() },
@@ -243,7 +288,7 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-                    
+
                     composable(
                         route = "wallet/{userId}",
                         arguments = listOf(navArgument("userId") { type = NavType.LongType })
@@ -255,51 +300,72 @@ class MainActivity : ComponentActivity() {
                         val balance by database.walletTransactionDao()
                             .getUserBalance(walletUserId)
                             .collectAsState(initial = 0.0)
-                        
+
                         WalletScreen(
                             balance = balance ?: 0.0,
                             transactions = walletTransactions,
                             onBackClick = { navController.popBackStack() },
                             onAddMoney = { amount: Double ->
                                 lifecycleScope.launch {
-                                    val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                                    val transaction = com.example.myapplication.entities.WalletTransaction(
-                                        userId = walletUserId,
-                                        type = "add",
-                                        description = "Add Money",
-                                        amount = amount,
-                                        date = dateFormat.format(java.util.Date())
+                                    val dateFormat = java.text.SimpleDateFormat(
+                                        "yyyy-MM-dd",
+                                        java.util.Locale.getDefault()
                                     )
+                                    val transaction =
+                                        com.example.myapplication.entities.WalletTransaction(
+                                            userId = walletUserId,
+                                            type = "add",
+                                            description = "Add Money",
+                                            amount = amount,
+                                            date = dateFormat.format(java.util.Date())
+                                        )
                                     database.walletTransactionDao().insert(transaction)
-                                    Toast.makeText(ctx, "Money added successfully!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        ctx,
+                                        "Money added successfully!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             },
                             onPay = { description: String, amount: Double ->
                                 lifecycleScope.launch {
-                                    val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                                    val transaction = com.example.myapplication.entities.WalletTransaction(
-                                        userId = walletUserId,
-                                        type = "pay",
-                                        description = description,
-                                        amount = amount,
-                                        date = dateFormat.format(java.util.Date())
+                                    val dateFormat = java.text.SimpleDateFormat(
+                                        "yyyy-MM-dd",
+                                        java.util.Locale.getDefault()
                                     )
+                                    val transaction =
+                                        com.example.myapplication.entities.WalletTransaction(
+                                            userId = walletUserId,
+                                            type = "pay",
+                                            description = description,
+                                            amount = amount,
+                                            date = dateFormat.format(java.util.Date())
+                                        )
                                     database.walletTransactionDao().insert(transaction)
-                                    Toast.makeText(ctx, "Payment successful!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(ctx, "Payment successful!", Toast.LENGTH_SHORT)
+                                        .show()
                                 }
                             },
                             onSend = { recipient: String, amount: Double ->
                                 lifecycleScope.launch {
-                                    val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                                    val transaction = com.example.myapplication.entities.WalletTransaction(
-                                        userId = walletUserId,
-                                        type = "send",
-                                        description = "Send to $recipient",
-                                        amount = amount,
-                                        date = dateFormat.format(java.util.Date())
+                                    val dateFormat = java.text.SimpleDateFormat(
+                                        "yyyy-MM-dd",
+                                        java.util.Locale.getDefault()
                                     )
+                                    val transaction =
+                                        com.example.myapplication.entities.WalletTransaction(
+                                            userId = walletUserId,
+                                            type = "send",
+                                            description = "Send to $recipient",
+                                            amount = amount,
+                                            date = dateFormat.format(java.util.Date())
+                                        )
                                     database.walletTransactionDao().insert(transaction)
-                                    Toast.makeText(ctx, "Money sent successfully!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        ctx,
+                                        "Money sent successfully!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             },
                             onTransactionClick = { transaction ->
@@ -309,7 +375,7 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-                    
+
                     composable(
                         route = "transactionDetails/{transactionId}/{transactionType}/{description}/{amount}/{date}",
                         arguments = listOf(
@@ -325,7 +391,7 @@ class MainActivity : ComponentActivity() {
                         val description = it.arguments?.getString("description") ?: ""
                         val amount = it.arguments?.getString("amount")?.toDoubleOrNull() ?: 0.0
                         val date = it.arguments?.getString("date") ?: ""
-                        
+
                         TransactionDetailsScreen(
                             transactionId = transactionId,
                             transactionType = transactionType,
@@ -365,12 +431,18 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
             startDestination = BottomNavItem.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
+            composable("statistics") {
+                StatisticsScreen()
+            }
             composable(BottomNavItem.Home.route) {
                 var currentUser by remember(userId) { mutableStateOf<User?>(null) }
                 var profile by remember(userId) { mutableStateOf<Profile?>(null) }
-                val userExpenses by database.expenseDao().getExpensesForUser(userId).collectAsState(initial = emptyList())
-                val walletTransactions by database.walletTransactionDao().getTransactionsForUser(userId).collectAsState(initial = emptyList())
-                val walletBalance by database.walletTransactionDao().getUserBalance(userId).collectAsState(initial = 0.0)
+                val userExpenses by database.expenseDao().getExpensesForUser(userId)
+                    .collectAsState(initial = emptyList())
+                val walletTransactions by database.walletTransactionDao()
+                    .getTransactionsForUser(userId).collectAsState(initial = emptyList())
+                val walletBalance by database.walletTransactionDao().getUserBalance(userId)
+                    .collectAsState(initial = 0.0)
 
                 LaunchedEffect(userId) {
                     val fetchedProfile = database.profileDao().findById(userId)
@@ -401,7 +473,8 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                             mainNavController.navigate(
                                 "transactionDetails/${transaction.id}/${transaction.type}/${transaction.description}/${transaction.amount}/${transaction.date}"
                             )
-                        }
+                        },
+                        navController = mainNavController
                     )
                 } else {
                     Box(
@@ -412,17 +485,19 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     }
                 }
             }
-            
+
             composable(BottomNavItem.Expenses.route) {
-                val groups by database.groupDao().getAllGroups().collectAsState(initial = emptyList())
+                val groups by database.groupDao().getAllGroups()
+                    .collectAsState(initial = emptyList())
 
                 ExpensesScreen(navController = navController, groups = groups) { group ->
                     navController.navigate("addExpense/${group.id}")
                 }
             }
-            
+
             composable(BottomNavItem.Groups.route) {
-                val groups by database.groupDao().getAllGroups().collectAsState(initial = emptyList())
+                val groups by database.groupDao().getAllGroups()
+                    .collectAsState(initial = emptyList())
 
                 GroupScreen(navController = navController, groups = groups) { group ->
                     navController.navigate("groupDetails/${group.id}")
@@ -439,11 +514,11 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                 val walletBalance by database.walletTransactionDao()
                     .getUserBalance(userId)
                     .collectAsState(initial = 0.0)
-                
+
                 // Calculate actual balance = wallet balance - expenses
                 val totalExpenses = userExpensesForWallet.sumOf { it.amount }
                 val actualBalance = (walletBalance ?: 0.0) - totalExpenses
-                
+
                 // Combine wallet transactions and expenses for display
                 val combinedTransactions = remember(walletTransactions, userExpensesForWallet) {
                     val expenseTransactions = userExpensesForWallet.map { expense ->
@@ -458,7 +533,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     }
                     (walletTransactions + expenseTransactions).sortedByDescending { it.date }
                 }
-                
+
                 WalletScreen(
                     balance = actualBalance,
                     transactions = combinedTransactions,
@@ -466,7 +541,10 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     showBackButton = false,
                     onAddMoney = { amount: Double ->
                         scope.launch {
-                            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                            val dateFormat = java.text.SimpleDateFormat(
+                                "yyyy-MM-dd",
+                                java.util.Locale.getDefault()
+                            )
                             val transaction = com.example.myapplication.entities.WalletTransaction(
                                 userId = userId,
                                 type = "add",
@@ -475,12 +553,16 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                                 date = dateFormat.format(java.util.Date())
                             )
                             database.walletTransactionDao().insert(transaction)
-                            Toast.makeText(context, "Money added successfully!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Money added successfully!", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     },
                     onPay = { description: String, amount: Double ->
                         scope.launch {
-                            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                            val dateFormat = java.text.SimpleDateFormat(
+                                "yyyy-MM-dd",
+                                java.util.Locale.getDefault()
+                            )
                             val transaction = com.example.myapplication.entities.WalletTransaction(
                                 userId = userId,
                                 type = "pay",
@@ -489,12 +571,16 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                                 date = dateFormat.format(java.util.Date())
                             )
                             database.walletTransactionDao().insert(transaction)
-                            Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     },
                     onSend = { recipient: String, amount: Double ->
                         scope.launch {
-                            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                            val dateFormat = java.text.SimpleDateFormat(
+                                "yyyy-MM-dd",
+                                java.util.Locale.getDefault()
+                            )
                             val transaction = WalletTransaction(
                                 userId = userId,
                                 type = "send",
@@ -503,7 +589,8 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                                 date = dateFormat.format(java.util.Date())
                             )
                             database.walletTransactionDao().insert(transaction)
-                            Toast.makeText(context, "Money sent successfully!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Money sent successfully!", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     },
                     onTransactionClick = { transaction ->
@@ -513,14 +600,14 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     }
                 )
             }
-            
+
             composable(BottomNavItem.Profile.route) {
                 var profile by remember { mutableStateOf<Profile?>(null) }
-                
+
                 LaunchedEffect(userId) {
                     profile = database.profileDao().findById(userId)
                 }
-                
+
                 profile?.let { userProfile ->
                     val user = User(
                         userId = userProfile.id.toString(),
@@ -528,7 +615,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                         email = userProfile.email,
                         phone = userProfile.phone
                     )
-                    
+
                     ProfileScreen(
                         user = user,
                         onBackClick = { /* No back button in bottom nav */ },
@@ -555,12 +642,12 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
             }
 
             composable("createGroup") {
-                CreateGroupScreen(navController = navController) {
-                        groupName, groupDescription ->
+                CreateGroupScreen(navController = navController) { groupName, groupDescription ->
                     scope.launch {
                         val newGroup = Group(name = groupName, description = groupDescription)
                         val groupId = database.groupDao().insert(newGroup)
-                        val groupMember = GroupMember(groupId = groupId, profileId = userId, status = "joined")
+                        val groupMember =
+                            GroupMember(groupId = groupId, profileId = userId, status = "joined")
                         database.groupMemberDao().insert(groupMember)
 
                         navController.navigate("inviteMembers/$groupId") {
@@ -569,7 +656,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     }
                 }
             }
-            
+
             composable(
                 route = "inviteMembers/{groupId}",
                 arguments = listOf(navArgument("groupId") { type = NavType.LongType })
@@ -580,11 +667,20 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                         scope.launch {
                             val profile = database.profileDao().findByEmailOrPhone(invitee)
                             if (profile != null) {
-                                val groupMember = GroupMember(groupId = groupId, profileId = profile.id, status = "invited")
+                                val groupMember = GroupMember(
+                                    groupId = groupId,
+                                    profileId = profile.id,
+                                    status = "invited"
+                                )
                                 database.groupMemberDao().insert(groupMember)
-                                Toast.makeText(context, "${profile.firstName} invited.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    "${profile.firstName} invited.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             } else {
-                                Toast.makeText(context, "User not found.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "User not found.", Toast.LENGTH_SHORT)
+                                    .show()
                             }
                         }
                     },
@@ -613,7 +709,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                                 date = date
                             )
                             database.expenseDao().insert(newExpense)
-                            
+
                             Toast.makeText(context, "Expense added", Toast.LENGTH_SHORT).show()
                             navController.popBackStack()
                         }
@@ -634,7 +730,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                 )
 
                 GroupDetailsScreen(
-                    groupId = groupId, 
+                    groupId = groupId,
                     onAddExpense = {
                         navController.navigate("addExpense/$groupId")
                     },
@@ -647,7 +743,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     viewModel = viewModel
                 )
             }
-            
+
             composable(
                 route = "groupBalance/{groupId}",
                 arguments = listOf(navArgument("groupId") { type = NavType.LongType })
@@ -657,7 +753,7 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                     factory = GroupDetailsViewModel.Factory(database, groupId)
                 )
                 val uiState by viewModel.uiState.collectAsState()
-                
+
                 uiState.balanceSummary?.let { balanceSummary ->
                     GroupBalanceScreen(
                         groupBalanceSummary = balanceSummary,

@@ -148,12 +148,6 @@ fun MainScreen(userName: String, userId: String) {
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            composable(BottomNavScreen.Home.route) {
-                HomeScreen(
-                    userName = userName,
-                    userId = userId
-                )
-            }
             composable(BottomNavScreen.Statistics.route) {
 
             }

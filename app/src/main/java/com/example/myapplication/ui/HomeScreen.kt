@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.navigation.NavController
 import androidx.room.withTransaction
 import com.example.myapplication.R
 import com.example.myapplication.database.AppDatabase
@@ -91,10 +92,11 @@ fun HomeScreen(
     localExpenses: List<Expense> = emptyList(),
     walletTransactions: List<WalletTransaction> = emptyList(),
     walletBalance: Double = 0.0,
+    onTransactionClick: (WalletTransaction) -> Unit = {},
+    navController: NavController,
     viewModel: HomeViewModel = viewModel(
         factory = HomeViewModelFactory(ServiceLocator.userRepository)
     ),
-    onTransactionClick: (WalletTransaction) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -139,7 +141,7 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .padding(top = 24.dp)
                 ) {
-                    BalanceCard(uiState = uiState, balance = balance, userName = userName)
+                    BalanceCard(uiState = uiState, balance = balance, userName = userName, navController = navController)
                 }
                 Spacer(modifier = Modifier.height(60.dp))
 
@@ -163,7 +165,8 @@ fun HomeScreen(
             onTransferSent = { recipient, amount ->
                 coroutineScope.launch {
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                        val dateFormat =
+                            java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
                         val transaction = WalletTransaction(
                             0,
                             userId.toLong(),
@@ -417,7 +420,7 @@ fun TransactionItem(
 }
 
 @Composable
-fun BalanceCard(uiState: UiState, balance: BalanceDto, userName: String) {
+fun BalanceCard(uiState: UiState, balance: BalanceDto, userName: String,navController: NavController) {
     val currentHour = remember { Calendar.getInstance().get(Calendar.HOUR_OF_DAY) }
     Column(
     ) {
@@ -434,28 +437,28 @@ fun BalanceCard(uiState: UiState, balance: BalanceDto, userName: String) {
             ) {
                 val width = size.width
                 val height = size.height
-                
+
                 val path = Path().apply {
                     moveTo(0f, 0f)
                     lineTo(0f, height - 60f)
-                    
+
                     // Curve di bagian bawah
                     quadraticBezierTo(
                         width / 2f, height + 20f,  // Control point (tengah, lebih rendah)
                         width, height - 60f         // End point (kanan)
                     )
-                    
+
                     lineTo(width, 0f)
                     close()
                 }
-                
+
                 drawPath(
                     path = path,
                     color = Color(0xFF2F7E79),
                     style = Fill
                 )
             }
-            
+
             // Decorative circles
             Box(
                 modifier = Modifier
@@ -568,7 +571,8 @@ fun BalanceCard(uiState: UiState, balance: BalanceDto, userName: String) {
                                 tint = Color.White,
                                 modifier = Modifier
                                     .size(20.dp)
-                                    .clickable { /* Handle menu click */ }
+                                    .clickable {
+                                        navController.navigate("statistics") }
                             )
                         }
 
@@ -747,7 +751,7 @@ fun TransactionHistorySection(
                 onClick = {
                     // Handle wallet transaction click
                     transaction.walletTransaction?.let { onTransactionClick(it) }
-                    
+
                     // Handle expense click - convert to WalletTransaction for navigation
                     transaction.expense?.let { expense ->
                         val tempWalletTransaction = WalletTransaction(
