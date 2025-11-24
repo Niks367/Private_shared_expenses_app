@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.myapplication.R
 import com.example.myapplication.entities.WalletTransaction
+import com.example.myapplication.ui.theme.PrimaryTeal
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -103,7 +104,7 @@ fun WalletScreen(
                             .size(212.dp)
                             .offset(x = (-55).dp, y = (-15).dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF357A6E).copy(alpha = 0.3f))
+                            .background(Color(0xFF1B5C58).copy(alpha = 0.3f))
                     )
                     
                     // Medium circle - top center-left
@@ -112,7 +113,7 @@ fun WalletScreen(
                             .size(127.dp)
                             .offset(x = 59.dp, y = (-15).dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF5AA99A).copy(alpha = 0.25f))
+                            .background(Color(0xFF438883).copy(alpha = 0.25f))
                     )
                     
                     // Small circle - top center-right
@@ -121,7 +122,7 @@ fun WalletScreen(
                             .size(85.dp)
                             .offset(x = 127.dp, y = (-22).dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF6FBDAD).copy(alpha = 0.2f))
+                            .background(Color(0xFF5BA89E).copy(alpha = 0.2f))
                     )
                 }
                 
@@ -165,7 +166,7 @@ fun WalletScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
-                        .padding(top = 140.dp),
+                        .padding(top = 135.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
