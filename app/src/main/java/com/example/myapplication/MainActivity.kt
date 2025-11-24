@@ -63,6 +63,7 @@ import com.example.myapplication.ui.GroupScreen
 import com.example.myapplication.ui.HomeScreen
 import com.example.myapplication.ui.InviteMembersScreen
 import com.example.myapplication.ui.LoginScreen
+import com.example.myapplication.ui.OnboardingScreen
 import com.example.myapplication.ui.PersonalInformationScreen
 import com.example.myapplication.ui.ProfileScreen
 import com.example.myapplication.ui.SignupScreen
@@ -93,8 +94,15 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = "login"
+                    startDestination = "onboarding"
                 ) {
+                    composable("onboarding") {
+                        OnboardingScreen(
+                            onGetStarted = { navController.navigate("login") },
+                            onLoginClick = { navController.navigate("login") }
+                        )
+                    }
+                    
                     composable("signup") {
                         SignupScreen(
                             onSignupClick = { firstName, lastName, email, phone, password ->
