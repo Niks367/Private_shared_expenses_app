@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.AddShoppingCart
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -123,7 +124,9 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("statistics") {
-                        StatisticsScreen()
+                        StatisticsScreen(
+                            onBack = { navController.popBackStack() }
+                        )
                     }
                     composable("signup") {
                         SignupScreen(
@@ -453,7 +456,9 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable("statistics") {
-                StatisticsScreen()
+                StatisticsScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(BottomNavItem.Home.route) {
                 var currentUser by remember(userId) { mutableStateOf<User?>(null) }
