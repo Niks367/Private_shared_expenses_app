@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.database.AppDatabase
 import com.example.myapplication.entities.TransactionEntity
+import com.example.myapplication.entities.WalletTransaction
+import com.example.myapplication.entities.Expense
 import com.example.myapplication.repositories.StatisticsRepository
 import com.example.myapplication.ui.viewmodels.StatisticsViewModel
 import com.example.myapplication.ui.viewmodels.StatisticsViewModelFactory
@@ -36,22 +38,55 @@ import com.example.myapplication.ui.viewmodels.StatisticsViewModelFactory
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun StatisticsScreen(
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    userId: Long = 1L // Default user for now
 ) {
     val tabs = listOf("Day", "Week", "Month", "Year")
     var selectedTab by remember { mutableStateOf(0) }
     var isExpense by remember { mutableStateOf(true) }
 
-
     val context = LocalContext.current
     val db = remember { AppDatabase.getInstance(context) }
-    val repo = remember { StatisticsRepository(db.transactionDao()) }
-    val viewModel: StatisticsViewModel = viewModel(
-        factory = StatisticsViewModelFactory(repo)
-    )
+    
+    // Get wallet transactions and expenses from local database
+    val walletTransactions by db.walletTransactionDao()
+        .getTransactionsForUser(userId)
+        .collectAsState(initial = emptyList())
+    
+    val expenses by db.expenseDao()
+        .getExpensesForUser(userId)
+        .collectAsState(initial = emptyList())
 
-    val transactions by viewModel.transactions.collectAsState()
-
+    // Combine and convert to display format
+    val transactions = remember(walletTransactions, expenses, isExpense) {
+        if (isExpense) {
+            expenses.map { 
+                TransactionEntity(
+                    id = it.id,
+                    userId = userId.toString(),
+                    title = it.description,
+                    category = it.description,
+                    amount = it.amount,
+                    type = "expense",
+                    createdAt = System.currentTimeMillis(),
+                    date = it.date
+                )
+            }
+        } else {
+            walletTransactions.filter { it.type != "send" }.map {
+                TransactionEntity(
+                    id = it.id,
+                    userId = userId.toString(),
+                    title = it.description,
+                    category = it.type,
+                    amount = it.amount,
+                    type = "income",
+                    createdAt = System.currentTimeMillis(),
+                    date = it.date
+                )
+            }
+        }
+    }
 
     val chartValues = transactions.map { it.amount.toFloat() }
 
@@ -223,9 +258,22 @@ fun SpendingRow(item: TransactionEntity) {
 
 @Composable
 fun SmoothLineChart(points: List<Float>) {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        if (points.isEmpty()) return@Canvas
+    if (points.isEmpty()) {
+        // Show placeholder when no data
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                "No data available",
+                color = Color.Gray,
+                fontSize = 14.sp
+            )
+        }
+        return
+    }
 
+    Canvas(modifier = Modifier.fillMaxSize()) {
         val w = size.width
         val h = size.height
 
@@ -233,48 +281,69 @@ fun SmoothLineChart(points: List<Float>) {
         val min = points.minOrNull() ?: 0f
         val range = (max - min).takeIf { it != 0f } ?: 1f
 
-        val step = w / (points.size - 1)
+        // Handle case with only 1 point
+        val step = if (points.size > 1) w / (points.size - 1) else w / 2f
 
         val pts = points.mapIndexed { idx, v ->
-            Offset(idx * step, h - ((v - min) / range) * h)
+            val x = if (points.size == 1) w / 2f else idx * step
+            Offset(x, h - ((v - min) / range) * h)
         }
 
-        val area = Path().apply {
-            moveTo(pts.first().x, pts.first().y)
-            for (i in 0 until pts.lastIndex) {
-                val p0 = pts[i]
-                val p1 = pts[i + 1]
-                val mid = (p0.x + p1.x) / 2f
-                cubicTo(mid, p0.y, mid, p1.y, p1.x, p1.y)
+        // Only draw area and line if we have at least 2 points
+        if (pts.size >= 2) {
+            val area = Path().apply {
+                moveTo(pts.first().x, pts.first().y)
+                for (i in 0 until pts.lastIndex) {
+                    val p0 = pts[i]
+                    val p1 = pts[i + 1]
+                    val mid = (p0.x + p1.x) / 2f
+                    cubicTo(mid, p0.y, mid, p1.y, p1.x, p1.y)
+                }
+                lineTo(pts.last().x, h)
+                lineTo(pts.first().x, h)
+                close()
             }
-            lineTo(pts.last().x, h)
-            lineTo(pts.first().x, h)
-            close()
-        }
 
-        drawPath(
-            path = area,
-            brush = Brush.verticalGradient(
-                listOf(Color(0xFFBEEADE).copy(alpha = 0.6f), Color.Transparent)
-            ),
-            style = Fill
-        )
+            drawPath(
+                path = area,
+                brush = Brush.verticalGradient(
+                    listOf(Color(0xFFBEEADE).copy(alpha = 0.6f), Color.Transparent)
+                ),
+                style = Fill
+            )
 
-        val line = Path().apply {
-            moveTo(pts.first().x, pts.first().y)
-            for (i in 0 until pts.lastIndex) {
-                val p0 = pts[i]
-                val p1 = pts[i + 1]
-                val mid = (p0.x + p1.x) / 2f
-                cubicTo(mid, p0.y, mid, p1.y, p1.x, p1.y)
+            val line = Path().apply {
+                moveTo(pts.first().x, pts.first().y)
+                for (i in 0 until pts.lastIndex) {
+                    val p0 = pts[i]
+                    val p1 = pts[i + 1]
+                    val mid = (p0.x + p1.x) / 2f
+                    cubicTo(mid, p0.y, mid, p1.y, p1.x, p1.y)
+                }
             }
-        }
 
-        drawPath(
-            path = line,
-            color = Color(0xFF2F9E89),
-            style = Stroke(width = 4f, cap = StrokeCap.Round)
-        )
+            drawPath(
+                path = line,
+                color = Color(0xFF2F9E89),
+                style = Stroke(width = 4f, cap = StrokeCap.Round)
+            )
+        }
+        
+        // Draw data points
+        pts.forEach { pt ->
+            drawCircle(
+                color = Color(0xFF2F9E89),
+                radius = 6f,
+                center = pt,
+                style = Fill
+            )
+            drawCircle(
+                color = Color.White,
+                radius = 3f,
+                center = pt,
+                style = Fill
+            )
+        }
     }
 }
 

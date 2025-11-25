@@ -457,7 +457,8 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
         ) {
             composable("statistics") {
                 StatisticsScreen(
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    userId = userId
                 )
             }
             composable(BottomNavItem.Home.route) {
