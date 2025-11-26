@@ -70,6 +70,12 @@ object WebSocketManager {
         }
     }
 
+    // Show local notification directly without WebSocket
+    fun showLocalNotification(context: Context, title: String, message: String) {
+        val notification = NotificationMessage(title, message)
+        showNotification(context, notification)
+    }
+
     private fun showNotification(context: Context, notification: NotificationMessage) {
         val builder = NotificationCompat.Builder(context, "expenses")
             .setSmallIcon(R.drawable.ic_launcher_foreground)

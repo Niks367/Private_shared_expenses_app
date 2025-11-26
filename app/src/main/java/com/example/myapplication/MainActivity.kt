@@ -104,6 +104,12 @@ class MainActivity : ComponentActivity() {
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     override fun onCreate(savedInstanceState: Bundle?) {
         createNotificationChannel(this)
+        
+        // Request notification permission for Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 100)
+        }
+        
         super.onCreate(savedInstanceState)
 
         setContent {
@@ -735,7 +741,18 @@ fun MainScreen(mainNavController: NavHostController, userId: Long) {
                                 date = date
                             )
                             database.expenseDao().insert(newExpense)
+                            
+                            // Show local notification immediately
+                            WebSocketManager.showLocalNotification(
+                                ctx.applicationContext,
+                                "New Expense",
+                                "A new expense was added to your group."
+                            )
+                            
+                            // Also try to trigger WebSocket notification (if server is running)
                             WebSocketManager.start(ctx.applicationContext)
+                            WebSocketManager.triggerExpenseAddedNotification()
+                            
                             Toast.makeText(context, "Expense added", Toast.LENGTH_SHORT).show()
                             navController.popBackStack()
                         }

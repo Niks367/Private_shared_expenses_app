@@ -1,8 +1,6 @@
 package com.example.myapplication.ui
 
 import android.os.Build
-import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresExtension
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -23,34 +21,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,30 +42,22 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
-import androidx.room.withTransaction
 import com.example.myapplication.R
-import com.example.myapplication.database.AppDatabase
 import com.example.myapplication.di.ServiceLocator
 import com.example.myapplication.entities.Expense
 import com.example.myapplication.entities.WalletTransaction
 import com.example.myapplication.model.BalanceDto
 import com.example.myapplication.model.Transaction
-import com.example.myapplication.model.User
 import com.example.myapplication.ui.viewmodels.HomeViewModel
 import com.example.myapplication.ui.viewmodels.HomeViewModelFactory
 import com.example.myapplication.ui.viewmodels.UiState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.Calendar
 
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
@@ -104,9 +80,6 @@ fun HomeScreen(
         viewModel.fetchUserBalance(userId)
         viewModel.loadUserData(userId)
     }
-    val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
-    var showTransferDialog by remember { mutableStateOf(false) }
     val isNewUser = userId.toIntOrNull() != null
     val totalExpense = localExpenses.sumOf { it.amount }
     val balance = if (isNewUser) {
@@ -118,32 +91,21 @@ fun HomeScreen(
     } else {
         uiState.userBalance?.balance ?: BalanceDto(0.0, 0.0, 0.0)
     }
-    val database = AppDatabase.getInstance(LocalContext.current)
     Scaffold(
         containerColor = Color.White,
-        floatingActionButton = {
-            AddTransactionFab(
-                onClick = {
-                    showTransferDialog = true
-                }
-            )
-        },
-        floatingActionButtonPosition = FabPosition.Center,
         content = { innerPadding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(innerPadding)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 24.dp)
                 ) {
                     BalanceCard(uiState = uiState, balance = balance, userName = userName, navController = navController)
                 }
-                Spacer(modifier = Modifier.height(60.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 TransactionHistorySection(
                     walletTransactions = walletTransactions,
@@ -152,209 +114,12 @@ fun HomeScreen(
                     isNewUser = isNewUser,
                     onTransactionClick = onTransactionClick
                 )
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 SendAgainSection()
                 Spacer(modifier = Modifier.height(48.dp))
             }
         }
     )
-    if (showTransferDialog) {
-        TransferDialog(
-            userId = userId,
-            onDismiss = { showTransferDialog = false },
-            onTransferSent = { recipient, amount ->
-                coroutineScope.launch {
-                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        val dateFormat =
-                            java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                        val transaction = WalletTransaction(
-                            0,
-                            userId.toLong(),
-                            "send",
-                            "Send to $recipient",
-                            amount,
-                            dateFormat.format(java.util.Date())
-                        )
-                        database.walletTransactionDao().insert(transaction)
-                    }
-
-                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                        Toast.makeText(
-                            context,
-                            "Money sent successfully!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
-                coroutineScope.launch {
-                    val dateFormat = java.text.SimpleDateFormat(
-                        "yyyy-MM-dd",
-                        java.util.Locale.getDefault()
-                    )
-                    val fetchedProfile = database.profileDao().findByFullName(recipient.trim())
-                    if (fetchedProfile == null) {
-                        Toast.makeText(
-                            context,
-                            "⚠️ No user found with that name. Please check the spelling.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        return@launch
-                    }
-
-                    val recipient = User(
-                        userId = fetchedProfile.id.toString(),
-                        username = "${fetchedProfile.firstName} ${fetchedProfile.lastName}",
-                        email = fetchedProfile.email,
-                        phone = fetchedProfile.phone
-                    )
-                    val userGroupIds = database.profileDao().getGroupIdsForProfile(userId.toLong())
-                    val recipientGroupIds =
-                        database.profileDao().getGroupIdsForProfile(fetchedProfile.id)
-                    val senderGroupId = userGroupIds.firstOrNull() ?: run {
-                        Toast.makeText(
-                            context,
-                            "⚠️ You aren’t a member of any group. Join or create one first.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        return@launch
-                    }
-                    val receiverGroupId = recipientGroupIds.firstOrNull() ?: run {
-                        Toast.makeText(
-                            context,
-                            "⚠️ The recipient isn’t in any group yet.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        return@launch
-                    }
-                    val senderExpense = Expense(
-                        groupId = senderGroupId,
-                        description = "Sent to ${recipient.username}",
-                        amount = amount,
-                        paidBy = userId.toLong(),
-                        date = dateFormat.format(java.util.Date())
-                    )
-                    val receiverExpense = WalletTransaction(
-                        userId = recipient.userId.toLong(),
-                        type = "add",
-                        description = "Received money from $userName ",
-                        amount = amount,
-                        date = dateFormat.format(java.util.Date())
-                    )
-                    withContext(Dispatchers.IO) {
-                        database.withTransaction {
-                            database.expenseDao().insert(senderExpense)
-                            database.walletTransactionDao().insert(receiverExpense)
-                        }
-                    }
-                }
-                showTransferDialog = false
-            }
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TransferDialog(
-    userId: String,
-    onDismiss: () -> Unit,
-    onTransferSent: (recipient: String, amount: Double) -> Unit
-) {
-    var recipient by remember { mutableStateOf("") }
-    var amountText by remember { mutableStateOf("") }
-    val presetContacts = listOf("Alice", "Bob", "Charlie", "David")
-
-    var expanded by remember { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = "Send Money") },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
-                ) {
-                    OutlinedTextField(
-                        value = recipient,
-                        onValueChange = { recipient = it },
-                        label = { Text("Recipient") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        presetContacts.forEach { contact ->
-                            DropdownMenuItem(
-                                text = { Text(contact) },
-                                onClick = {
-                                    recipient = contact
-                                    expanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-                OutlinedTextField(
-                    value = amountText,
-                    onValueChange = {
-                        if (it.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
-                            amountText = it
-                        }
-                    },
-                    label = { Text("Amount") },
-                    placeholder = { Text("e.g. 12.34") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val amount = amountText.toDoubleOrNull()
-                    if (recipient.isBlank() || amount == null || amount <= 0.0) {
-                        return@TextButton
-                    }
-                    onTransferSent(recipient.trim(), amount)
-                }
-            ) {
-                Text("Send")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-@Composable
-fun AddTransactionFab(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    FloatingActionButton(
-        onClick = onClick,
-        elevation = FloatingActionButtonDefaults.elevation(),
-        modifier = modifier
-            .size(64.dp)
-    ) {
-        Icon(
-            painter = painterResource(id = R.drawable.add),
-            contentDescription = "Add transaction",
-            modifier = Modifier.size(32.dp)
-        )
-    }
 }
 
 @Composable
@@ -745,7 +510,7 @@ fun TransactionHistorySection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        displayedTransactions.take(4).forEach { transaction ->
+        displayedTransactions.take(3).forEach { transaction ->
             TransactionItem(
                 transaction = transaction,
                 onClick = {
@@ -766,7 +531,7 @@ fun TransactionHistorySection(
                     }
                 }
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
         }
         if (displayedTransactions.isEmpty()) {
             Text(
@@ -777,7 +542,7 @@ fun TransactionHistorySection(
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
@@ -786,7 +551,7 @@ fun SendAgainSection() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .offset(y = (-20).dp)
+            .offset(y = (-50).dp)
             .padding(horizontal = 22.dp)
     ) {
         Row(

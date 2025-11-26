@@ -40,7 +40,6 @@ fun WalletScreen(
     onTransactionClick: (WalletTransaction) -> Unit = {}
 ) {
     var showAddMoneyDialog by remember { mutableStateOf(false) }
-    var showPayDialog by remember { mutableStateOf(false) }
     var showSendDialog by remember { mutableStateOf(false) }
 
     Box(
@@ -205,11 +204,6 @@ fun WalletScreen(
                     )
                     WalletActionButton(
                         icon = R.drawable.expense,
-                        label = "Pay",
-                        onClick = { showPayDialog = true }
-                    )
-                    WalletActionButton(
-                        icon = R.drawable.transfer,
                         label = "Send",
                         onClick = { showSendDialog = true }
                     )
@@ -260,17 +254,6 @@ fun WalletScreen(
             onConfirm = { amount ->
                 onAddMoney(amount)
                 showAddMoneyDialog = false
-            }
-        )
-    }
-
-    if (showPayDialog) {
-        PaymentDialog(
-            title = "Pay",
-            onDismiss = { showPayDialog = false },
-            onConfirm = { recipient, amount ->
-                onPay(recipient, amount)
-                showPayDialog = false
             }
         )
     }
