@@ -148,7 +148,7 @@ fun ProfileScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset(y = (-80).dp)
+                    .offset(y = (-60).dp)
             ) {
 
                 Column(
@@ -160,7 +160,7 @@ fun ProfileScreen(
                     Box(
                         modifier = Modifier
                             .size(120.dp)
-                            .offset(y = (-35).dp)   // << same as GroupScreens
+                            .offset(y = (-10).dp)   // << same as GroupScreens
                             .clip(CircleShape)
                             .background(White),
                         contentAlignment = Alignment.Center

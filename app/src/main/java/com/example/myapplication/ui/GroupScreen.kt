@@ -151,14 +151,14 @@ fun GroupScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset(y = (-80).dp),
+                    .offset(y = (-60).dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
                 // ICON (moved further up into header)
                 Box(
                     modifier = Modifier
-                        .offset(y = (-35).dp)
+                        .offset(y = (-10).dp)
                         .size(120.dp)
                         .clip(CircleShape)
                         .background(White),
