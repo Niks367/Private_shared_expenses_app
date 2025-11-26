@@ -1,8 +1,12 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    kotlin("kapt")
+    // 1. Plugins SHOULD NOT be applied here. They are usually applied in the root
+    // settings.gradle.kts or build.gradle.kts and inherited by the app module.
+    // However, to keep it building (as you noted), we keep them for now, but
+    // the application plugin should NOT be in the plugins block AND at the same time
+    // declared in the root build.gradle.kts with apply false.
+    // The preferred way for the app module is to use id(...) just for the application:
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
 }
 
 android {
@@ -18,93 +22,66 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-
-    buildTypes {
-        debug {
-            isMinifyEnabled = false
-            isShrinkResources = false
+    
+    // Set up the correct test source set directories for clarity and consistency
+    sourceSets {
+        getByName("test") {
+            // Your pure JUnit tests (e.g., DebtCalculatorTest.kt) go here
+            java.srcDirs("src/test/kotlin")
         }
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+        getByName("androidTest") {
+            // Your Instrumented tests (e.g., UserRepositoryTest.kt) go here
+            java.srcDirs("src/androidTest/kotlin")
         }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-        freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
     }
 
     buildFeatures {
         compose = true
     }
+
     composeOptions {
+        // You should align this version with the Kotlin version in your root build.gradle.kts
         kotlinCompilerExtensionVersion = "1.5.10"
     }
-    packagingOptions {
-        pickFirst("META-INF/gradle/incremental.annotation.processors")
+
+    compileOptions {
+        // Use Java 17 for both source and target compatibility
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
     }
 }
 
 dependencies {
-    // ---------- COMPOSE BOM ----------
-    implementation(platform(libs.androidx.compose.bom.v20251100))
+    // 2. Add dependencies required for the Coroutine tests (UserRepositoryTest.kt)
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.compose.ui:ui:1.5.10")
+    implementation("androidx.compose.material3:material3:1.3.2")
+    implementation("androidx.activity:activity-compose:1.8.2")
 
-    // ---------- CORE AND ACTIVITY ----------
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.activity.compose)
-
-    // ---------- COMPOSE UI ----------
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.runtime)
-    implementation(libs.androidx.material3)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-    implementation("androidx.compose.material:material-icons-extended:1.6.8")
-
-    // ---------- NAVIGATION ----------
-    implementation(libs.androidx.navigation.compose)
-
-    // ---------- LIFECYCLE ----------
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
-
-    // ---------- GOOGLE SUPPORT ----------
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-
-    // ---------- IMAGE LIBRARIES ----------
-    implementation(libs.landscapist)
-    implementation(libs.landscapist.coil3)
-
-    // ---------- TESTING ----------
+    // Local Unit Tests (DebtCalculatorTest, TransactionDtoTest)
     testImplementation("junit:junit:4.13.2")
-    testImplementation("io.mockk:mockk:1.13.5")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    testImplementation("androidx.room:room-testing:2.8.4")
+    
+    // Add Coroutine testing library needed for UserRepositoryTest
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3") 
+    
+    // Add Mocking library needed for UserRepositoryTest
+    // Replace with MockK or other library if preferred
+    testImplementation("org.mockito:mockito-core:4.8.0") 
 
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-    // ---------- NETWORK ----------
-    implementation(libs.retrofit)
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.google.code.gson:gson:2.10.1")
-
-    // ---------- ROOM ----------
-    implementation("androidx.room:room-runtime:2.8.4")
-    implementation("androidx.room:room-ktx:2.8.4")
-    kapt("androidx.room:room-compiler:2.8.4")
+    // Instrumented Android Tests (UserRepositoryTest - if using Android APIs)
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    
+    // 3. Add necessary Compose test dependencies (if you have Compose UI tests)
+    val composeBom = platform("androidx.compose:compose-bom:2023.10.01")
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
+    
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
