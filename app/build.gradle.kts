@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     kotlin("kapt")
-    kotlin("plugin.serialization") version "1.9.22"
+    kotlin("plugin.serialization") version "1.9.22" # Note: Consider updating this version to align with Kotlin 2.2.10
 }
 
 android {
@@ -34,11 +34,13 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
+        // CONSIDER UPGRADING to JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_11 
         targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "11"
+        // CONSIDER UPGRADING to "17"
+        jvmTarget = "11" 
         freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
     }
     buildFeatures {
@@ -48,7 +50,8 @@ android {
         pickFirst("META-INF/gradle/incremental.annotation.processors")
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.10"
+        // WARNING: 1.5.10 is likely incompatible with Kotlin 2.2.10
+        kotlinCompilerExtensionVersion = "1.5.10" 
     }
 }
 
@@ -84,31 +87,35 @@ dependencies {
     // ---------- OTHER GOOGLE / SUPPORT ----------
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+    // MOVED to libs.versions.toml
+    implementation(libs.google.accompanist.permissions) 
     
     // ---------- MATERIAL ICONS (from expensesAndGroups) ----------
-    implementation("androidx.compose.material:material-icons-extended-android:1.6.8")
+    // You could move this to the TOML file too, but keeping it simple for now
+    implementation("androidx.compose.material:material-icons-extended-android:1.6.8") 
 
     // ---------- OPTIONAL IMAGE LIBRARIES ----------
     implementation(libs.landscapist)
     implementation(libs.landscapist.coil3)
 
-    // ---------- TEST ----------
+    // ---------- TEST AND DATA LAYER LIBRARIES (Cleaned up) ----------
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Retrofit (Now uses TOML reference)
     implementation(libs.retrofit)
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.google.code.gson:gson:2.10.1")
-    kapt("androidx.room:room-compiler:2.8.4")
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.google.gson)
 
-    // Ktor for WebSocket client
-    implementation("io.ktor:ktor-client-core:2.3.6")
-    implementation("io.ktor:ktor-client-okhttp:2.3.6")
-    implementation("io.ktor:ktor-client-websockets:2.3.6")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    // Room KAPT (Now uses TOML reference)
+    kapt(libs.androidx.room.compiler)
 
-
+    // Ktor for WebSocket client (Now uses TOML reference)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.websockets)
+    implementation(libs.kotlinx.serialization.json)
 }
